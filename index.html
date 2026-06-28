@@ -149,9 +149,40 @@
   .note{background:#fff7e0;border:1px solid var(--gold);border-radius:10px;padding:10px 12px;font-size:13px;margin-top:12px}
   textarea.code{width:100%;height:70px;font-family:monospace;font-size:11px;border:1px solid #d9c89f;border-radius:8px;padding:8px;resize:vertical}
   .ok{color:var(--win);font-weight:800}
+
+  /* ---------- TABS ---------- */
+  .tabs{display:flex;gap:4px;margin-left:14px;background:rgba(0,0,0,.18);padding:4px;border-radius:10px}
+  .tab{cursor:pointer;border:0;background:transparent;color:#d8e9df;font-weight:700;font-size:13.5px;padding:7px 14px;border-radius:7px}
+  .tab.active{background:var(--gold);color:#3a2d05}
+  body.view-lb .bracket-only{display:none !important}
+
+  /* ---------- LEADERBOARD ---------- */
+  .lb{display:none;max-width:980px;margin:0 auto;padding:26px 16px 60px}
+  body.view-lb .lb{display:block}
+  body.view-lb .scroller{display:none}
+  .lb h2{margin:0 0 4px;color:var(--green-d);font-size:22px}
+  .lb .sub{color:var(--muted);font-size:13px;margin-bottom:16px}
+  .lbcard{background:var(--panel);border:1.5px solid #e0d2af;border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+  table.lbt{width:100%;border-collapse:collapse;font-size:14px}
+  table.lbt th,table.lbt td{padding:11px 14px;text-align:left;border-bottom:1px solid #ece0c4}
+  table.lbt th{background:linear-gradient(180deg,#1c8a57,var(--green));color:#fff;font-size:12.5px;letter-spacing:.4px}
+  table.lbt td.c,table.lbt th.c{text-align:center}
+  table.lbt td.pts{text-align:right;font-weight:900;color:var(--gold-d);font-size:16px}
+  table.lbt tr:last-child td{border-bottom:0}
+  table.lbt tbody tr:nth-child(even){background:#fbf6ea}
+  table.lbt tbody tr.top1{background:#fff4cf}
+  .pos{font-weight:800;width:30px}
+  .lb .champcell{display:flex;align-items:center;gap:7px}
+  .lb .champcell img{width:24px;height:17px;border-radius:2px;box-shadow:0 0 0 1px rgba(0,0,0,.12)}
+  .lb-empty{padding:40px 20px;text-align:center;color:var(--muted)}
+  .lb-empty .big{font-size:40px;margin-bottom:8px}
+  .lb-legend{margin-top:14px;font-size:12.5px;color:var(--muted)}
+  .lb-legend b{color:var(--ink)}
+
   @media (max-width:640px){
     .field input{min-width:120px}
     .brand{font-size:15px}
+    .tabs{margin-left:0}
   }
 </style>
 </head>
@@ -160,23 +191,38 @@
 <header>
   <div class="bar">
     <div class="brand"><span class="ball">⚽</span><div>QUINIELA MUNDIAL<small>2026 · PLAYOFFS</small></div></div>
+    <div class="tabs">
+      <button class="tab active" id="tabBracket">🗂️ Cuadro</button>
+      <button class="tab" id="tabLb">🏅 Tabla</button>
+    </div>
     <div class="grow"></div>
-    <div class="field">
+    <div class="field bracket-only">
       <label for="pname">Tu nombre</label>
       <input id="pname" placeholder="Escribe tu nombre" autocomplete="name">
     </div>
-    <div class="progress">
+    <div class="progress bracket-only">
       <span id="ptext">0/31</span>
       <div class="pbar"><div class="pfill" id="pfill"></div></div>
     </div>
     <button class="btn btn-ghost" id="rulesBtn">¿Cómo se puntúa?</button>
-    <button class="btn btn-ghost" id="loadBtn" title="Para el organizador">Ver código</button>
-    <button class="btn btn-ghost" id="resetBtn">Reiniciar</button>
-    <button class="btn btn-gold" id="sendBtn">Enviar quiniela ➤</button>
+    <button class="btn btn-ghost bracket-only" id="loadBtn" title="Para el organizador">Ver código</button>
+    <button class="btn btn-ghost bracket-only" id="resetBtn">Reiniciar</button>
+    <button class="btn btn-gold bracket-only" id="sendBtn">Enviar quiniela ➤</button>
   </div>
 </header>
 
 <div class="hint">📜 Haz <b>clic en el equipo</b> que crees que avanza (sube solo a la siguiente ronda) y escribe el <b>marcador</b> que predices. El partido en rojo (<b>Sudáfrica–Canadá</b>) ya está en juego: queda bloqueado y no otorga puntos. &nbsp; <b>← desliza para ver todo el cuadro →</b></div>
+
+<!-- ===================== HOJA 2: TABLA DE POSICIONES ===================== -->
+<div class="lb" id="leaderboard">
+  <h2>🏅 Tabla de posiciones</h2>
+  <div class="sub" id="lbSub">Aún sin datos.</div>
+  <div class="lbcard" id="lbCard"></div>
+  <div class="lb-legend">
+    <b>Puntos:</b> avance Dieciseisavos 1 · Octavos 2 · Cuartos 4 · Semis 8 · Final/Campeón 16 ·
+    marcador exacto +3 · resultado +1. &nbsp;<b>Desempate:</b> más marcadores exactos.
+  </div>
+</div>
 
 <div class="scroller">
   <div class="tournament" id="tournament">
@@ -242,12 +288,27 @@
 // Si pones aquí una URL (ej. de Formspree: https://formspree.io/f/xxxx)
 // el botón "Enviar" mandará las quinielas directo a tu correo. Si lo dejas
 // vacío, se usa WhatsApp / copiar / descargar.
-const SUBMIT_ENDPOINT = "";
+const SUBMIT_ENDPOINT = "https://formspree.io/f/maqgjgre";
 
 // Puntos por acertar quién avanza, según la ronda (ponderado).
 const PTS = { R32:1, R16:2, QF:4, SF:8, F:16 };
 const PTS_EXACT = 3;   // marcador exacto
 const PTS_RESULT = 1;  // resultado correcto (gana/empata/pierde)
+
+/* ============================================================
+   DATOS DE LA TABLA DE POSICIONES  (los lleno yo cuando me pases los forms)
+   ============================================================ */
+// 1) Participantes: un objeto por persona. Pega aquí lo que te llegue
+//    (mismo formato del "código"/JSON). Ejemplo de formato:
+//    { name:"Fabri", champion:"ar", picks:{ r32_2:{w:"nl",a:"2",b:"0"}, ... } }
+const PARTICIPANTS = [];
+
+// 2) Resultados REALES, se llenan conforme se juega cada partido.
+//    Por id de partido: w = quién avanzó (code), a/b = marcador (reglamentario+prórroga).
+//    Ejemplo:  r32_2:{w:"nl",a:"2",b:"0"},  r16_1:{w:"nl",a:"1",b:"1"}  (gana en penales)
+const RESULTS = {
+  // r32_2:{w:"nl", a:"2", b:"0"},
+};
 
 /* ============================================================
    EQUIPOS  (code -> nombre + bandera flagcdn)
@@ -568,6 +629,64 @@ function showModal(title, html){ document.getElementById("modalTitle").textConte
 function closeModal(){ document.getElementById("overlay").classList.remove("show"); }
 
 /* ============================================================
+   TABLA DE POSICIONES
+   ============================================================ */
+const SCORABLE = ALL_IDS.filter(id => !M[id].locked); // el partido en vivo no puntúa
+
+function scoreParticipant(p){
+  let total=0, adv=0, exact=0;
+  const picks = p.picks||{};
+  SCORABLE.forEach(id=>{
+    const res = RESULTS[id]; if(!res || !res.w) return;     // sin resultado aún
+    const pk = picks[id]||{};
+    if(pk.w && pk.w===res.w){ total += PTS[M[id].round]; adv++; }      // acierto de avance
+    const has = v => v!=="" && v!=null;
+    if(has(res.a)&&has(res.b)&&has(pk.a)&&has(pk.b)){
+      const pa=+pk.a, pb=+pk.b, ra=+res.a, rb=+res.b;
+      if(pa===ra && pb===rb){ total+=PTS_EXACT; exact++; }
+      else if(Math.sign(pa-pb)===Math.sign(ra-rb)){ total+=PTS_RESULT; }
+    }
+  });
+  return { name:p.name||"(sin nombre)", champion:p.champion, total, adv, exact };
+}
+
+function renderLeaderboard(){
+  const card=document.getElementById("lbCard"), sub=document.getElementById("lbSub");
+  const nRes = SCORABLE.filter(id=>RESULTS[id]&&RESULTS[id].w).length;
+
+  if(!PARTICIPANTS.length){
+    sub.textContent = `0 participantes · ${nRes}/${SCORABLE.length} partidos con resultado`;
+    card.innerHTML = `<div class="lb-empty"><div class="big">🗳️</div>
+      <b>Todavía no hay participantes cargados.</b><br>
+      Cuando recibas los formularios, se agregan aquí y la tabla se calcula sola.</div>`;
+    return;
+  }
+  const rows = PARTICIPANTS.map(scoreParticipant)
+    .sort((a,b)=> b.total-a.total || b.exact-a.exact || a.name.localeCompare(b.name));
+  const medal = i => i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1);
+  sub.textContent = `${rows.length} participante(s) · ${nRes}/${SCORABLE.length} partidos con resultado`;
+  card.innerHTML = `<table class="lbt">
+    <thead><tr><th class="c">#</th><th>Participante</th><th>Campeón</th>
+      <th class="c">Aciertos</th><th class="c">Exactos</th><th class="c">Pts</th></tr></thead>
+    <tbody>${rows.map((r,i)=>`
+      <tr class="${i===0&&nRes>0?'top1':''}">
+        <td class="c pos">${nRes>0?medal(i):i+1}</td>
+        <td>${escapeHtml(r.name)}</td>
+        <td><div class="champcell">${r.champion?`<img src="${teamFlag(r.champion)}"> ${teamName(r.champion)}`:'<span style="color:var(--muted)">—</span>'}</div></td>
+        <td class="c">${r.adv}</td><td class="c">${r.exact}</td>
+        <td class="pts">${r.total}</td>
+      </tr>`).join("")}</tbody></table>`;
+}
+function escapeHtml(s){ return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+function showView(v){
+  document.body.classList.toggle("view-lb", v==="lb");
+  document.getElementById("tabLb").classList.toggle("active", v==="lb");
+  document.getElementById("tabBracket").classList.toggle("active", v!=="lb");
+  if(v==="lb") renderLeaderboard(); else requestAnimationFrame(drawWires);
+}
+
+/* ============================================================
    INIT
    ============================================================ */
 load();
@@ -580,6 +699,8 @@ document.getElementById("sendBtn").onclick=openSend;
 document.getElementById("rulesBtn").onclick=openRules;
 document.getElementById("loadBtn").onclick=openLoad;
 document.getElementById("resetBtn").onclick=()=>{ if(confirm("¿Borrar todas tus selecciones?")){ localStorage.removeItem("quiniela2026"); location.reload(); } };
+document.getElementById("tabBracket").onclick=()=>showView("bracket");
+document.getElementById("tabLb").onclick=()=>showView("lb");
 document.getElementById("modalX").onclick=closeModal;
 document.getElementById("overlay").addEventListener("click",e=>{ if(e.target.id==="overlay") closeModal(); });
 window.addEventListener("resize", ()=>requestAnimationFrame(drawWires));
