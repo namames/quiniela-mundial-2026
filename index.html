@@ -112,6 +112,7 @@
     display:block;font-size:9.5px;font-weight:800;letter-spacing:.5px;color:#fff;background:var(--red);
     text-align:center;padding:2px;text-transform:uppercase
   }
+  .match.locked .livebadge.done{background:var(--win)}
 
   /* ---------- CENTER / FINAL ---------- */
   .center{display:flex;flex-direction:column;align-items:center;justify-content:center;width:230px;gap:10px;z-index:2;margin:0 6px}
@@ -211,7 +212,7 @@
   </div>
 </header>
 
-<div class="hint">📜 Haz <b>clic en el equipo</b> que crees que avanza (sube solo a la siguiente ronda) y escribe el <b>marcador</b> que predices. El partido en rojo (<b>Sudáfrica–Canadá</b>) ya está en juego: queda bloqueado y no otorga puntos. &nbsp; <b>← desliza para ver todo el cuadro →</b></div>
+<div class="hint">📜 Haz <b>clic en el equipo</b> que crees que avanza (sube solo a la siguiente ronda) y escribe el <b>marcador</b> que predices. El partido ya jugado (<b>Sudáfrica–Canadá</b>) aparece cerrado con su resultado real y no otorga puntos. &nbsp; <b>← desliza para ver todo el cuadro →</b></div>
 
 <!-- ===================== HOJA 2: TABLA DE POSICIONES ===================== -->
 <div class="lb" id="leaderboard">
@@ -373,7 +374,7 @@ const COLS = {
       R32:["r32_9","r32_10","r32_11","r32_12","r32_13","r32_14","r32_15","r32_16"] }
 };
 const ALL_IDS = Object.keys(M);
-const PICKABLE = ALL_IDS; // todos requieren ganador
+const PICKABLE = ALL_IDS.filter(id => !M[id].locked); // los partidos cerrados no se piden (se resuelven solos)
 
 /* ============================================================
    ESTADO
@@ -388,16 +389,17 @@ function load(){
     ALL_IDS.forEach(id=>{ if(!state.picks[id]) state.picks[id]={w:null,a:"",b:""}; }); } }catch(e){}
 }
 
+// quién avanza de un partido: en partidos cerrados manda el resultado real; si no, el pick
+function advancer(id){
+  const m = M[id];
+  if(m.locked && RESULTS[id] && RESULTS[id].w) return RESULTS[id].w;
+  return state.picks[id].w;
+}
 function slotTeam(m, slot){
   if(m.round==="R32") return slot==="A"?m.teamA:m.teamB;
-  const child = slot==="A"?m.feedA:m.feedB;
-  return state.picks[child].w;
+  return advancer(slot==="A"?m.feedA:m.feedB);
 }
-function isLockedNow(m){
-  if(m.round!=="R32") return false;
-  if(m.locked) return true;
-  return new Date(m.kickoff) <= new Date();
-}
+function isLockedNow(m){ return !!m.locked; }
 
 /* Limpia picks que quedaron inválidos tras cambiar un resultado previo */
 function validate(){
@@ -456,7 +458,7 @@ function renderSkeleton(){
 }
 
 function onPick(id, slot){
-  if(readOnly) return;
+  if(readOnly || isLockedNow(M[id])) return;   // partido cerrado: no se elige, se resuelve solo
   const team = slotTeam(M[id], slot);
   if(!team) return;                  // slot aún sin definir
   state.picks[id].w = (state.picks[id].w===team) ? null : team;
@@ -467,7 +469,10 @@ function refresh(){
   ALL_IDS.forEach(id=>{
     const m=M[id], el=document.getElementById("m-"+id);
     const locked = isLockedNow(m);
+    const real = (locked && RESULTS[id] && RESULTS[id].w) ? RESULTS[id] : null; // resultado oficial
     el.classList.toggle("locked", locked);
+    const badge = el.querySelector('.livebadge');
+    if(badge){ badge.textContent = real ? "✓ Final" : "● En vivo"; badge.classList.toggle("done", !!real); }
     ["A","B"].forEach(slot=>{
       const s = el.querySelector(`.slot[data-slot="${slot}"]`);
       const code = slotTeam(m, slot);
@@ -475,11 +480,11 @@ function refresh(){
       const inp = s.querySelector('.score');
       if(code){ img.src=teamFlag(code); img.style.visibility="visible"; nm.textContent=teamName(code); s.classList.remove("tbd"); }
       else { img.style.visibility="hidden"; nm.textContent="Por definir"; s.classList.add("tbd"); }
-      const w = state.picks[id].w;
+      const w = real ? real.w : state.picks[id].w;   // a quién resaltar (resultado real manda en cerrados)
       s.classList.toggle("win", !!w && w===code);
       s.classList.toggle("lose", !!w && code && w!==code);
-      // score
-      inp.value = state.picks[id][slot==="A"?"a":"b"] || "";
+      // marcador: en partidos cerrados se muestra el real
+      inp.value = real ? (slot==="A"?real.a:real.b) : (state.picks[id][slot==="A"?"a":"b"] || "");
       inp.disabled = locked || readOnly || !code;
     });
   });
