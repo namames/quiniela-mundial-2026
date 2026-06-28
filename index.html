@@ -307,6 +307,7 @@ const PARTICIPANTS = [];
 //    Por id de partido: w = quién avanzó (code), a/b = marcador (reglamentario+prórroga).
 //    Ejemplo:  r32_2:{w:"nl",a:"2",b:"0"},  r16_1:{w:"nl",a:"1",b:"1"}  (gana en penales)
 const RESULTS = {
+  r32_1:{w:"ca", a:"0", b:"1"},   // Sudáfrica 0 - 1 Canadá (en vivo: no otorga puntos)
   // r32_2:{w:"nl", a:"2", b:"0"},
 };
 
@@ -562,7 +563,8 @@ function openSend(){
     a.download=`quiniela-${(p.name||"jugador").replace(/\s+/g,"_")}.json`;a.click();
   };
   if(SUBMIT_ENDPOINT){
-    fetch(SUBMIT_ENDPOINT,{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify(p)})
+    const mail = { nombre:p.name, campeon:teamName(p.champion)||"(sin definir)", codigo:code, _subject:`Quiniela Mundial 2026 — ${p.name}` };
+    fetch(SUBMIT_ENDPOINT,{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify(mail)})
       .then(r=>{document.getElementById("autoStatus").textContent = r.ok?"✓ ¡Enviada automáticamente! (igual puedes usar los botones)":"No se pudo enviar auto; usa un botón de abajo.";})
       .catch(()=>{document.getElementById("autoStatus").textContent="No se pudo enviar auto; usa un botón de abajo.";});
   }
