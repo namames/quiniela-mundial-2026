@@ -213,7 +213,7 @@
   </div>
 </header>
 
-<div class="hint">📜 Escribe el <b>marcador</b> de cada partido: el ganador <b>avanza solo</b>. Solo en <b>empate</b> haz clic en quién pasa (penales). El partido ya jugado (<b>Sudáfrica–Canadá</b>) aparece cerrado con su resultado real y no otorga puntos. &nbsp; <b>← desliza para ver todo el cuadro →</b></div>
+<div class="hint">📜 Escribe el <b>marcador</b> de cada partido: el ganador <b>avanza solo</b>. Solo en <b>empate</b> haz clic en quién pasa (penales). Los partidos ya jugados o <b>en vivo</b> aparecen bloqueados (no se pueden editar). &nbsp; <b>← desliza para ver todo el cuadro →</b></div>
 
 <!-- ===================== HOJA 2: TABLA DE POSICIONES ===================== -->
 <div class="lb" id="leaderboard">
@@ -347,7 +347,7 @@ addR32("r32_6","es","at","L","2026-07-02T12:00");
 addR32("r32_7","us","ba","L","2026-07-01T19:00");
 addR32("r32_8","be","sn","L","2026-07-01T12:00");
 // --- LADO DERECHO (alimenta Semifinal 2) ---
-addR32("r32_9","br","jp","R","2026-06-29T20:00");
+addR32("r32_9","br","jp","R","2026-06-29T20:00",true);  // EN VIVO (bloqueado, pero sí puntúa)
 addR32("r32_10","ci","no","R","2026-06-30T16:00");
 addR32("r32_11","mx","ec","R","2026-06-30T20:00");
 addR32("r32_12","eng","cd","R","2026-07-01T16:00");
@@ -355,6 +355,10 @@ addR32("r32_13","ar","cv","R","2026-07-03T16:00");
 addR32("r32_14","au","eg","R","2026-07-03T12:00");
 addR32("r32_15","co","gh","R","2026-07-03T20:00");
 addR32("r32_16","ch","dz","R","2026-07-02T20:00");
+
+// Partidos que NADIE pudo predecir (en vivo desde el lanzamiento) → no otorgan puntos a nadie.
+// Sudáfrica–Canadá ya estaba en juego al lanzar la quiniela. (Brasil–Japón sí puntúa: se predijo antes.)
+M.r32_1.noScore = true;
 
 addUp("r16_1","R16","r32_1","r32_2","L"); addUp("r16_2","R16","r32_3","r32_4","L");
 addUp("r16_3","R16","r32_5","r32_6","L"); addUp("r16_4","R16","r32_7","r32_8","L");
@@ -676,7 +680,7 @@ function closeModal(){ document.getElementById("overlay").classList.remove("show
 /* ============================================================
    TABLA DE POSICIONES
    ============================================================ */
-const SCORABLE = ALL_IDS.filter(id => !M[id].locked); // el partido en vivo no puntúa
+const SCORABLE = ALL_IDS.filter(id => !M[id].noScore); // solo se excluyen los que nadie pudo predecir
 
 function scoreParticipant(p){
   let total=0, adv=0, exact=0;
