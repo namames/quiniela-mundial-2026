@@ -113,6 +113,7 @@
     text-align:center;padding:2px;text-transform:uppercase
   }
   .match.locked .livebadge.done{background:var(--win)}
+  .match.missing{border-color:var(--red);box-shadow:0 0 0 2px rgba(179,36,42,.35),var(--shadow)}
 
   /* ---------- CENTER / FINAL ---------- */
   .center{display:flex;flex-direction:column;align-items:center;justify-content:center;width:230px;gap:10px;z-index:2;margin:0 6px}
@@ -212,7 +213,7 @@
   </div>
 </header>
 
-<div class="hint">📜 Haz <b>clic en el equipo</b> que crees que avanza (sube solo a la siguiente ronda) y escribe el <b>marcador</b> que predices. El partido ya jugado (<b>Sudáfrica–Canadá</b>) aparece cerrado con su resultado real y no otorga puntos. &nbsp; <b>← desliza para ver todo el cuadro →</b></div>
+<div class="hint">📜 Escribe el <b>marcador</b> de cada partido: el ganador <b>avanza solo</b>. Solo en <b>empate</b> haz clic en quién pasa (penales). El partido ya jugado (<b>Sudáfrica–Canadá</b>) aparece cerrado con su resultado real y no otorga puntos. &nbsp; <b>← desliza para ver todo el cuadro →</b></div>
 
 <!-- ===================== HOJA 2: TABLA DE POSICIONES ===================== -->
 <div class="lb" id="leaderboard">
@@ -382,6 +383,14 @@ const PICKABLE = ALL_IDS.filter(id => !M[id].locked); // los partidos cerrados n
 let state = { name:"", picks:{} };  // picks[id] = {w, a, b}
 ALL_IDS.forEach(id => state.picks[id] = {w:null, a:"", b:""});
 let readOnly = false;
+let highlightMissing = false;   // se activa al intentar enviar incompleto
+
+// un partido está completo si tiene marcador (ambos) y ganador definido
+function isComplete(id){
+  const pk=state.picks[id];
+  return pk.w && pk.a!=="" && pk.a!=null && pk.b!=="" && pk.b!=null;
+}
+function missingIds(){ return PICKABLE.filter(id => !isComplete(id)); }
 
 function save(){ if(readOnly) return; localStorage.setItem("quiniela2026", JSON.stringify(state)); }
 function load(){
@@ -451,14 +460,30 @@ function renderSkeleton(){
       const v = e.target.value.replace(/[^0-9]/g,'').slice(0,2);
       e.target.value=v;
       state.picks[inp.dataset.id][inp.dataset.slot==="A"?"a":"b"]=v;
-      save(); refresh();
+      applyScoreWinner(inp.dataset.id);
+      validate(); save(); refresh();
     });
     inp.addEventListener('click', e=>e.stopPropagation());
   });
 }
 
+// ¿el marcador de este partido define un ganador? (ambos llenos y distintos)
+function scoreDecisive(id){
+  const pk=state.picks[id];
+  return pk.a!=="" && pk.a!=null && pk.b!=="" && pk.b!=null && (+pk.a)!==(+pk.b);
+}
+// Si el marcador da un ganador, lo elige solo; si es empate, se respeta el clic.
+function applyScoreWinner(id){
+  if(isLockedNow(M[id])) return;
+  if(scoreDecisive(id)){
+    const pk=state.picks[id];
+    pk.w = (+pk.a) > (+pk.b) ? slotTeam(M[id],"A") : slotTeam(M[id],"B");
+  }
+}
+
 function onPick(id, slot){
-  if(readOnly || isLockedNow(M[id])) return;   // partido cerrado: no se elige, se resuelve solo
+  if(readOnly || isLockedNow(M[id])) return;      // partido cerrado: se resuelve solo
+  if(scoreDecisive(id)) return;                   // el marcador ya decide; solo se elige en empate
   const team = slotTeam(M[id], slot);
   if(!team) return;                  // slot aún sin definir
   state.picks[id].w = (state.picks[id].w===team) ? null : team;
@@ -473,6 +498,7 @@ function refresh(){
     el.classList.toggle("locked", locked);
     const badge = el.querySelector('.livebadge');
     if(badge){ badge.textContent = real ? "✓ Final" : "● En vivo"; badge.classList.toggle("done", !!real); }
+    el.classList.toggle("missing", highlightMissing && PICKABLE.includes(id) && !isComplete(id));
     ["A","B"].forEach(slot=>{
       const s = el.querySelector(`.slot[data-slot="${slot}"]`);
       const code = slotTeam(m, slot);
@@ -492,8 +518,8 @@ function refresh(){
   const champ = state.picks["f_1"].w, cc=document.getElementById("champc");
   if(champ){ cc.classList.remove("empty"); cc.innerHTML=`<img src="${teamFlag(champ)}"> ${teamName(champ)}`; }
   else { cc.classList.add("empty"); cc.textContent="Por definir"; }
-  // progreso
-  const done = PICKABLE.filter(id=>state.picks[id].w).length;
+  // progreso (partidos completos: ganador + marcador)
+  const done = PICKABLE.filter(isComplete).length;
   document.getElementById("ptext").textContent = done+"/"+PICKABLE.length;
   document.getElementById("pfill").style.width = (done/PICKABLE.length*100)+"%";
   document.getElementById("pname").value = state.name||"";
@@ -542,8 +568,20 @@ function summaryText(p){
 function openSend(){
   const p = payload();
   if(!p.name){ alert("Escribe tu nombre antes de enviar 🙂"); document.getElementById("pname").focus(); return; }
-  const done = PICKABLE.filter(id=>state.picks[id].w).length;
-  if(done<PICKABLE.length && !confirm(`Te faltan ${PICKABLE.length-done} partido(s) por elegir. ¿Enviar de todos modos?`)) return;
+  const faltan = missingIds();
+  if(faltan.length){
+    highlightMissing = true;
+    showView("bracket");           // por si estaban en la Tabla
+    refresh();
+    const first = document.getElementById("m-"+faltan[0]);
+    if(first) first.scrollIntoView({behavior:"smooth", inline:"center", block:"center"});
+    showModal("Falta completar tu quiniela", `
+      <p>Para enviar tienes que llenar <b>todo el cuadro hasta la final</b>: elegir ganador y marcador en cada partido.</p>
+      <div class="note">Te faltan <b>${faltan.length}</b> partido(s). Los marqué con <b style="color:var(--red)">borde rojo</b> en el cuadro 👇<br>
+      Recuerda: si pones un marcador con ganador, avanza solo; <b>solo en empates</b> tienes que dar clic a quién pasa (penales).</div>`);
+    return;
+  }
+  highlightMissing = false; refresh();
 
   const code = encodeCode(p), txt = summaryText(p);
   let html = `<p>Listo <b>${p.name}</b>. Elige cómo mandarme tu quiniela:</p>`;
