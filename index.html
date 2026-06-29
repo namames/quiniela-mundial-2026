@@ -115,6 +115,34 @@
   .match.locked .livebadge.done{background:var(--win)}
   .match.missing{border-color:var(--red);box-shadow:0 0 0 2px rgba(179,36,42,.35),var(--shadow)}
 
+  /* ---------- MODO REVISIÓN (cuadro de un participante) ---------- */
+  .reviewbar{display:none}
+  body.review .reviewbar{
+    display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+    max-width:1500px;margin:10px auto 0;padding:10px 16px;
+    background:linear-gradient(180deg,#fff7e0,#f2e3b6);border:2px solid var(--gold);border-radius:12px;box-shadow:var(--shadow)
+  }
+  .reviewbar .who{font-weight:900;font-size:16px;color:var(--green-d)}
+  .reviewbar .who img{width:26px;height:18px;border-radius:2px;vertical-align:middle;margin-left:6px}
+  .reviewbar .stat{font-size:13px;color:var(--ink)}
+  .reviewbar .stat b{color:var(--gold-d);font-size:15px}
+  .reviewbar .grow{flex:1}
+  body.review .bracket-only{display:none !important}
+  .match .cmp{display:none}
+  body.review .match .cmp{
+    display:block;border-top:1px dashed #d9c89f;margin-top:2px;padding:5px 8px;font-size:11px;line-height:1.35;background:#fbf6ea
+  }
+  body.review .match .cmp .real{color:var(--muted)}
+  body.review .match .cmp .real img{width:16px;height:11px;border-radius:1px;vertical-align:middle}
+  .ptsbadge{float:right;font-weight:800;border-radius:20px;padding:1px 7px;font-size:11px}
+  .ptsbadge.good{background:var(--win);color:#fff}
+  .ptsbadge.zero{background:#ded2b4;color:#6f6750}
+  body.review .match.noparticip{filter:grayscale(1);opacity:.55}
+  body.review .match.noparticip .cmp{color:var(--muted);font-style:italic}
+  body.review .match{filter:none !important}
+  body.view-lb table.lbt tbody tr{cursor:pointer}
+  body.view-lb table.lbt tbody tr:hover{background:#fdeecb !important}
+
   /* ---------- CENTER / FINAL ---------- */
   .center{display:flex;flex-direction:column;align-items:center;justify-content:center;width:230px;gap:10px;z-index:2;margin:0 6px}
   .trophy{width:120px;height:auto;filter:drop-shadow(0 6px 10px rgba(120,90,10,.35))}
@@ -214,6 +242,9 @@
 </header>
 
 <div class="hint">📜 Escribe el <b>marcador</b> de cada partido: el ganador <b>avanza solo</b>. Solo en <b>empate</b> haz clic en quién pasa (penales). Los partidos ya jugados o <b>en vivo</b> aparecen bloqueados (no se pueden editar). &nbsp; <b>← desliza para ver todo el cuadro →</b></div>
+
+<!-- ===================== BARRA DE REVISIÓN (cuadro de un participante) ===================== -->
+<div class="reviewbar" id="reviewBar"></div>
 
 <!-- ===================== HOJA 2: TABLA DE POSICIONES ===================== -->
 <div class="lb" id="leaderboard">
@@ -416,11 +447,30 @@ function load(){
     ALL_IDS.forEach(id=>{ if(!state.picks[id]) state.picks[id]={w:null,a:"",b:""}; }); } }catch(e){}
 }
 
+let reviewMode = false;    // viendo el cuadro de un participante
+let reviewInfo = null;     // {name, total, adv, exact, champion}
+let backupState = null;    // estado propio para restaurar al salir de revisión
+
 // quién avanza de un partido: en partidos cerrados manda el resultado real; si no, el pick
 function advancer(id){
   const m = M[id];
+  // en revisión mostramos el cuadro TAL CUAL lo predijo la persona (su pick manda; sólo si lo dejó vacío usamos el real)
+  if(reviewMode) return state.picks[id].w || (RESULTS[id] && RESULTS[id].w) || null;
   if(m.locked && RESULTS[id] && RESULTS[id].w) return RESULTS[id].w;
   return state.picks[id].w;
+}
+// puntos que sumó un pick en un partido (igual criterio que la tabla)
+function matchPoints(id, picks){
+  if(M[id].noScore) return null;
+  const res = RESULTS[id]; if(!res || !res.w) return null;
+  const pk = (picks||state.picks)[id] || {}; let pts = 0;
+  if(pk.w && pk.w===res.w) pts += PTS[M[id].round];
+  const has = v => v!=="" && v!=null;
+  if(has(res.a)&&has(res.b)&&has(pk.a)&&has(pk.b)){
+    if(+pk.a===+res.a && +pk.b===+res.b) pts += PTS_EXACT;
+    else if(Math.sign(+pk.a-+pk.b)===Math.sign(+res.a-+res.b)) pts += PTS_RESULT;
+  }
+  return pts;
 }
 function slotTeam(m, slot){
   if(m.round==="R32") return slot==="A"?m.teamA:m.teamB;
@@ -448,7 +498,8 @@ function buildMatchEl(id){
   el.id = "m-"+id;
   el.innerHTML =
     `<div class="livebadge">● En vivo</div>`+
-    slotHTML(id,"A")+slotHTML(id,"B");
+    slotHTML(id,"A")+slotHTML(id,"B")+
+    `<div class="cmp"></div>`;
   return el;
 }
 function slotHTML(id,slot){
@@ -512,11 +563,12 @@ function refresh(){
   ALL_IDS.forEach(id=>{
     const m=M[id], el=document.getElementById("m-"+id);
     const locked = isLockedNow(m);
-    const real = (locked && RESULTS[id] && RESULTS[id].w) ? RESULTS[id] : null; // resultado oficial
-    el.classList.toggle("locked", locked);
+    // en revisión NO sobreescribimos con el real: mostramos lo que la persona predijo
+    const real = (!reviewMode && locked && RESULTS[id] && RESULTS[id].w) ? RESULTS[id] : null;
+    el.classList.toggle("locked", locked && !reviewMode);
     const badge = el.querySelector('.livebadge');
     if(badge){ badge.textContent = real ? "✓ Final" : "● En vivo"; badge.classList.toggle("done", !!real); }
-    el.classList.toggle("missing", highlightMissing && PICKABLE.includes(id) && !isComplete(id));
+    el.classList.toggle("missing", !reviewMode && highlightMissing && PICKABLE.includes(id) && !isComplete(id));
     ["A","B"].forEach(slot=>{
       const s = el.querySelector(`.slot[data-slot="${slot}"]`);
       const code = slotTeam(m, slot);
@@ -531,6 +583,31 @@ function refresh(){
       inp.value = real ? (slot==="A"?real.a:real.b) : (state.picks[id][slot==="A"?"a":"b"] || "");
       inp.disabled = locked || readOnly || !code;
     });
+    // --- comparación vs resultado real (sólo en modo revisión) ---
+    const cmp = el.querySelector('.cmp');
+    if(reviewMode && cmp){
+      const pk = state.picks[id], res = RESULTS[id];
+      const blank = !pk.w && pk.a==="" && pk.b==="";
+      let noPart = false, html = "";
+      if(m.noScore){
+        noPart = true;
+        html = `⚪ Partido en vivo al lanzar — nadie podía predecir · sin puntos`;
+      } else if(locked && blank){
+        noPart = true;
+        html = `⚪ No participó (el partido ya estaba en juego) · +0`;
+      } else if(res && res.w){
+        const pts = matchPoints(id, state.picks) || 0;
+        const ok = pk.w && pk.w===res.w;
+        html = `<span class="ptsbadge ${pts>0?'good':'zero'}">+${pts}</span>`+
+               `<span class="real">Real: <img src="${teamFlag(res.w)}"> ${teamName(res.w)} ${res.a}-${res.b} ${ok?'✓':'✗'}</span>`;
+      } else {
+        html = `<span class="real">Aún sin jugar</span>`;
+      }
+      cmp.innerHTML = html;
+      el.classList.toggle("noparticip", noPart);
+    } else if(cmp){
+      el.classList.remove("noparticip");
+    }
   });
   // campeón
   const champ = state.picks["f_1"].w, cc=document.getElementById("champc");
@@ -724,21 +801,53 @@ function renderLeaderboard(){
       Cuando recibas los formularios, se agregan aquí y la tabla se calcula sola.</div>`;
     return;
   }
-  const rows = PARTICIPANTS.map(scoreParticipant)
+  const rows = PARTICIPANTS.map(p => Object.assign(scoreParticipant(p), {p}))
     .sort((a,b)=> b.total-a.total || b.exact-a.exact || a.name.localeCompare(b.name));
   const medal = i => i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1);
-  sub.textContent = `${rows.length} participante(s) · ${nRes}/${SCORABLE.length} partidos con resultado`;
+  sub.innerHTML = `${rows.length} participante(s) · ${nRes}/${SCORABLE.length} partidos con resultado · <b>clic en un nombre para ver su cuadro</b>`;
   card.innerHTML = `<table class="lbt">
     <thead><tr><th class="c">#</th><th>Participante</th><th>Campeón</th>
       <th class="c">Aciertos</th><th class="c">Exactos</th><th class="c">Pts</th></tr></thead>
     <tbody>${rows.map((r,i)=>`
       <tr class="${i===0&&nRes>0?'top1':''}">
         <td class="c pos">${nRes>0?medal(i):i+1}</td>
-        <td>${escapeHtml(r.name)}</td>
+        <td>${escapeHtml(r.name)} <span style="color:var(--gold-d)">👁️</span></td>
         <td><div class="champcell">${r.champion?`<img src="${teamFlag(r.champion)}"> ${teamName(r.champion)}`:'<span style="color:var(--muted)">—</span>'}</div></td>
         <td class="c">${r.adv}</td><td class="c">${r.exact}</td>
         <td class="pts">${r.total}</td>
       </tr>`).join("")}</tbody></table>`;
+  card.querySelectorAll('tbody tr').forEach((tr,i)=> tr.onclick = ()=> openReview(rows[i].p));
+}
+
+/* ---------- MODO REVISIÓN ---------- */
+function openReview(p){
+  if(!reviewMode) backupState = JSON.stringify({picks:state.picks, name:state.name});
+  reviewMode = true; readOnly = true; highlightMissing = false;
+  state.picks = JSON.parse(JSON.stringify(p.picks||{}));
+  ALL_IDS.forEach(id=>{ if(!state.picks[id]) state.picks[id]={w:null,a:"",b:""}; });
+  reviewInfo = scoreParticipant(p);
+  document.body.classList.add("review");
+  renderReviewBar();
+  showView("bracket");
+  refresh();
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+function exitReview(){
+  reviewMode = false; readOnly = false;
+  document.body.classList.remove("review");
+  if(backupState){ const b=JSON.parse(backupState); state.picks=b.picks; state.name=b.name||""; backupState=null; }
+  else load();
+  ALL_IDS.forEach(id=>{ if(!state.picks[id]) state.picks[id]={w:null,a:"",b:""}; });
+  refresh();
+}
+function renderReviewBar(){
+  const r = reviewInfo || {}; const bar = document.getElementById("reviewBar");
+  bar.innerHTML =
+    `<span class="who">${escapeHtml(r.name||"")}${r.champion?` <img src="${teamFlag(r.champion)}" title="Campeón: ${teamName(r.champion)}">`:''}</span>
+     <span class="stat">Total: <b>${r.total||0} pts</b> · ${r.adv||0} aciertos · ${r.exact||0} exactos</span>
+     <span class="grow"></span>
+     <button class="btn btn-gold" id="backToLb">← Volver a la tabla</button>`;
+  bar.querySelector("#backToLb").onclick = ()=>{ exitReview(); showView("lb"); };
 }
 function escapeHtml(s){ return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
 
@@ -762,8 +871,8 @@ document.getElementById("sendBtn").onclick=openSend;
 document.getElementById("rulesBtn").onclick=openRules;
 document.getElementById("loadBtn").onclick=openLoad;
 document.getElementById("resetBtn").onclick=()=>{ if(confirm("¿Borrar todas tus selecciones?")){ localStorage.removeItem("quiniela2026"); location.reload(); } };
-document.getElementById("tabBracket").onclick=()=>showView("bracket");
-document.getElementById("tabLb").onclick=()=>showView("lb");
+document.getElementById("tabBracket").onclick=()=>{ if(reviewMode) exitReview(); showView("bracket"); };
+document.getElementById("tabLb").onclick=()=>{ if(reviewMode) exitReview(); showView("lb"); };
 document.getElementById("modalX").onclick=closeModal;
 document.getElementById("overlay").addEventListener("click",e=>{ if(e.target.id==="overlay") closeModal(); });
 window.addEventListener("resize", ()=>requestAnimationFrame(drawWires));
