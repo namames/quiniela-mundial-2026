@@ -283,6 +283,7 @@
   </div>
 </div>
 
+<script src="data.js"></script>
 <script>
 /* ============================================================
    CONFIG
@@ -303,7 +304,7 @@ const PTS_RESULT = 1;  // resultado correcto (gana/empata/pierde)
 // 1) Participantes: un objeto por persona. Pega aquí lo que te llegue
 //    (mismo formato del "código"/JSON). Ejemplo de formato:
 //    { name:"Fabri", champion:"ar", picks:{ r32_2:{w:"nl",a:"2",b:"0"}, ... } }
-const PARTICIPANT_CODES = [
+const PARTICIPANT_CODES = (typeof window!=="undefined" && window.QUINIELA_DATA && window.QUINIELA_DATA.participants) || [
 `eyJuYW1lIjoiRmFicml6aW8iLCJ0cyI6IjIwMjYtMDYtMjhUMjE6NDE6MjAuMzAyWiIsInBpY2tzIjp7InIzMl8xIjp7InciOm51bGwsImEiOiIiLCJiIjoiIn0sInIzMl8yIjp7InciOiJubCIsImEiOiIyIiwiYiI6IjEifSwicjMyXzMiOnsidyI6ImRlIiwiYSI6IjMiLCJiIjoiMSJ9LCJyMzJfNCI6eyJ3IjoiZnIiLCJhIjoiMyIsImIiOiIwIn0sInIzMl81Ijp7InciOiJwdCIsImEiOiIyIiwiYiI6IjIifSwicjMyXzYiOnsidyI6ImVzIiwiYSI6IjIiLCJiIjoiMCJ9LCJyMzJfNyI6eyJ3IjoidXMiLCJhIjoiMiIsImIiOiIwIn0sInIzMl84Ijp7InciOiJzbiIsImEiOiIxIiwiYiI6IjEifSwicjMyXzkiOnsidyI6ImJyIiwiYSI6IjIiLCJiIjoiMCJ9LCJyMzJfMTAiOnsidyI6Im5vIiwiYSI6IjEiLCJiIjoiMiJ9LCJyMzJfMTEiOnsidyI6Im14IiwiYSI6IjEiLCJiIjoiMSJ9LCJyMzJfMTIiOnsidyI6ImVuZyIsImEiOiIzIiwiYiI6IjAifSwicjMyXzEzIjp7InciOiJhciIsImEiOiIzIiwiYiI6IjAifSwicjMyXzE0Ijp7InciOiJlZyIsImEiOiIwIiwiYiI6IjIifSwicjMyXzE1Ijp7InciOiJjbyIsImEiOiIxIiwiYiI6IjEifSwicjMyXzE2Ijp7InciOiJjaCIsImEiOiIxIiwiYiI6IjEifSwicjE2XzEiOnsidyI6Im5sIiwiYSI6IjAiLCJiIjoiMiJ9LCJyMTZfMiI6eyJ3IjoiZnIiLCJhIjoiMCIsImIiOiIyIn0sInIxNl8zIjp7InciOiJlcyIsImEiOiIxIiwiYiI6IjEifSwicjE2XzQiOnsidyI6InNuIiwiYSI6IjEiLCJiIjoiMSJ9LCJyMTZfNSI6eyJ3IjoiYnIiLCJhIjoiMiIsImIiOiIxIn0sInIxNl82Ijp7InciOiJteCIsImEiOiIxIiwiYiI6IjEifSwicjE2XzciOnsidyI6ImFyIiwiYSI6IjIiLCJiIjoiMCJ9LCJyMTZfOCI6eyJ3IjoiY28iLCJhIjoiMSIsImIiOiIwIn0sInFmXzEiOnsidyI6ImZyIiwiYSI6IjAiLCJiIjoiMiJ9LCJxZl8yIjp7InciOiJlcyIsImEiOiIyIiwiYiI6IjEifSwicWZfMyI6eyJ3IjoiYnIiLCJhIjoiMiIsImIiOiIwIn0sInFmXzQiOnsidyI6ImFyIiwiYSI6IjIiLCJiIjoiMSJ9LCJzZl8xIjp7InciOiJmciIsImEiOiIyIiwiYiI6IjAifSwic2ZfMiI6eyJ3IjoiYnIiLCJhIjoiMiIsImIiOiIyIn0sImZfMSI6eyJ3IjoiZnIiLCJhIjoiMiIsImIiOiIxIn19LCJjaGFtcGlvbiI6ImZyIn0=`,
 `eyJuYW1lIjoiR2Vycnl5IiwidHMiOiIyMDI2LTA2LTI4VDIyOjIxOjQ0LjY4NVoiLCJwaWNrcyI6eyJyMzJfMSI6eyJ3IjpudWxsLCJhIjoiIiwiYiI6IiJ9LCJyMzJfMiI6eyJ3IjoibmwiLCJhIjoiMiIsImIiOiIwIn0sInIzMl8zIjp7InciOiJkZSIsImEiOiIyIiwiYiI6IjAifSwicjMyXzQiOnsidyI6ImZyIiwiYSI6IjMiLCJiIjoiMCJ9LCJyMzJfNSI6eyJ3IjoicHQiLCJhIjoiMiIsImIiOiIxIn0sInIzMl82Ijp7InciOiJlcyIsImEiOiIzIiwiYiI6IjAifSwicjMyXzciOnsidyI6InVzIiwiYSI6IjIiLCJiIjoiMCJ9LCJyMzJfOCI6eyJ3IjoiYmUiLCJhIjoiMSIsImIiOiIwIn0sInIzMl85Ijp7InciOiJiciIsImEiOiIyIiwiYiI6IjEifSwicjMyXzEwIjp7InciOiJubyIsImEiOiIwIiwiYiI6IjMifSwicjMyXzExIjp7InciOiJteCIsImEiOiIxIiwiYiI6IjAifSwicjMyXzEyIjp7InciOiJlbmciLCJhIjoiMyIsImIiOiIwIn0sInIzMl8xMyI6eyJ3IjoiYXIiLCJhIjoiNCIsImIiOiIwIn0sInIzMl8xNCI6eyJ3IjoiZWciLCJhIjoiMSIsImIiOiIyIn0sInIzMl8xNSI6eyJ3IjoiY28iLCJhIjoiMiIsImIiOiIwIn0sInIzMl8xNiI6eyJ3IjoiY2giLCJhIjoiMiIsImIiOiIxIn0sInIxNl8xIjp7InciOiJubCIsImEiOiIwIiwiYiI6IjEifSwicjE2XzIiOnsidyI6ImZyIiwiYSI6IjEiLCJiIjoiMiJ9LCJyMTZfMyI6eyJ3IjoiZXMiLCJhIjoiMSIsImIiOiIyIn0sInIxNl80Ijp7InciOiJ1cyIsImEiOiIyIiwiYiI6IjEifSwicjE2XzUiOnsidyI6ImJyIiwiYSI6IjIiLCJiIjoiMSJ9LCJyMTZfNiI6eyJ3IjoibXgiLCJhIjoiMSIsImIiOiIwIn0sInIxNl83Ijp7InciOiJhciIsImEiOiIzIiwiYiI6IjAifSwicjE2XzgiOnsidyI6ImNvIiwiYSI6IjIiLCJiIjoiMCJ9LCJxZl8xIjp7InciOiJmciIsImEiOiIwIiwiYiI6IjIifSwicWZfMiI6eyJ3IjoiZXMiLCJhIjoiMiIsImIiOiIwIn0sInFmXzMiOnsidyI6ImJyIiwiYSI6IjIiLCJiIjoiMSJ9LCJxZl80Ijp7InciOiJhciIsImEiOiIyIiwiYiI6IjEifSwic2ZfMSI6eyJ3IjoiZnIiLCJhIjoiMiIsImIiOiIxIn0sInNmXzIiOnsidyI6ImFyIiwiYSI6IjEiLCJiIjoiMiJ9LCJmXzEiOnsidyI6ImZyIiwiYSI6IjMiLCJiIjoiMiJ9fSwiY2hhbXBpb24iOiJmciJ9`,
 `eyJuYW1lIjoiU2VyY2hjcmVzIiwidHMiOiIyMDI2LTA2LTI5VDAzOjE0OjQ1LjM2OVoiLCJwaWNrcyI6eyJyMzJfMSI6eyJ3IjpudWxsLCJhIjoiIiwiYiI6IiJ9LCJyMzJfMiI6eyJ3IjoibmwiLCJhIjoiMyIsImIiOiIyIn0sInIzMl8zIjp7InciOiJkZSIsImEiOiIzIiwiYiI6IjEifSwicjMyXzQiOnsidyI6ImZyIiwiYSI6IjMiLCJiIjoiMSJ9LCJyMzJfNSI6eyJ3IjoicHQiLCJhIjoiMiIsImIiOiIxIn0sInIzMl82Ijp7InciOiJlcyIsImEiOiIzIiwiYiI6IjAifSwicjMyXzciOnsidyI6InVzIiwiYSI6IjMiLCJiIjoiMSJ9LCJyMzJfOCI6eyJ3IjoiYmUiLCJhIjoiMSIsImIiOiIwIn0sInIzMl85Ijp7InciOiJiciIsImEiOiIyIiwiYiI6IjEifSwicjMyXzEwIjp7InciOiJubyIsImEiOiIxIiwiYiI6IjIifSwicjMyXzExIjp7InciOiJteCIsImEiOiIyIiwiYiI6IjAifSwicjMyXzEyIjp7InciOiJlbmciLCJhIjoiMyIsImIiOiIxIn0sInIzMl8xMyI6eyJ3IjoiYXIiLCJhIjoiMyIsImIiOiIwIn0sInIzMl8xNCI6eyJ3IjoiZWciLCJhIjoiMCIsImIiOiIyIn0sInIzMl8xNSI6eyJ3IjoiY28iLCJhIjoiMiIsImIiOiIxIn0sInIzMl8xNiI6eyJ3IjoiY2giLCJhIjoiMiIsImIiOiIxIn0sInIxNl8xIjp7InciOiJubCIsImEiOiIxIiwiYiI6IjMifSwicjE2XzIiOnsidyI6ImZyIiwiYSI6IjAiLCJiIjoiMiJ9LCJyMTZfMyI6eyJ3IjoicHQiLCJhIjoiMSIsImIiOiIxIn0sInIxNl80Ijp7InciOiJiZSIsImEiOiIxIiwiYiI6IjIifSwicjE2XzUiOnsidyI6ImJyIiwiYSI6IjIiLCJiIjoiMSJ9LCJyMTZfNiI6eyJ3IjoibXgiLCJhIjoiMSIsImIiOiIwIn0sInIxNl83Ijp7InciOiJhciIsImEiOiIyIiwiYiI6IjAifSwicjE2XzgiOnsidyI6ImNvIiwiYSI6IjIiLCJiIjoiMCJ9LCJxZl8xIjp7InciOiJmciIsImEiOiIyIiwiYiI6IjIifSwicWZfMiI6eyJ3IjoicHQiLCJhIjoiMiIsImIiOiIxIn0sInFmXzMiOnsidyI6ImJyIiwiYSI6IjEiLCJiIjoiMCJ9LCJxZl80Ijp7InciOiJhciIsImEiOiIyIiwiYiI6IjEifSwic2ZfMSI6eyJ3IjoiZnIiLCJhIjoiMiIsImIiOiIwIn0sInNmXzIiOnsidyI6ImJyIiwiYSI6IjEiLCJiIjoiMCJ9LCJmXzEiOnsidyI6ImZyIiwiYSI6IjIiLCJiIjoiMCJ9fSwiY2hhbXBpb24iOiJmciJ9`,
@@ -317,10 +318,9 @@ const PARTICIPANTS = PARTICIPANT_CODES.map(c=>{ try{ return decodeCode(c); }catc
 // 2) Resultados REALES, se llenan conforme se juega cada partido.
 //    Por id de partido: w = quién avanzó (code), a/b = marcador (reglamentario+prórroga).
 //    Ejemplo:  r32_2:{w:"nl",a:"2",b:"0"},  r16_1:{w:"nl",a:"1",b:"1"}  (gana en penales)
-const RESULTS = {
+const RESULTS = (typeof window!=="undefined" && window.QUINIELA_DATA && window.QUINIELA_DATA.results) || {
   r32_1:{w:"ca", a:"0", b:"1"},   // Sudáfrica 0 - 1 Canadá (no otorga puntos)
   r32_9:{w:"br", a:"2", b:"1"},   // Brasil 2 - 1 Japón
-  // r32_2:{w:"nl", a:"2", b:"0"},
 };
 
 /* ============================================================
@@ -389,6 +389,10 @@ const COLS = {
       R32:["r32_9","r32_10","r32_11","r32_12","r32_13","r32_14","r32_15","r32_16"] }
 };
 const ALL_IDS = Object.keys(M);
+// data.js (window.QUINIELA_DATA) puede sobrescribir qué partidos están bloqueados / no puntúan
+const QDATA = (typeof window!=="undefined" && window.QUINIELA_DATA) ? window.QUINIELA_DATA : null;
+if(QDATA && QDATA.locked){  ALL_IDS.forEach(id=>M[id].locked=false);  QDATA.locked.forEach(id=>{ if(M[id]) M[id].locked=true; }); }
+if(QDATA && QDATA.noScore){ ALL_IDS.forEach(id=>M[id].noScore=false); QDATA.noScore.forEach(id=>{ if(M[id]) M[id].noScore=true; }); }
 const PICKABLE = ALL_IDS.filter(id => !M[id].locked); // los partidos cerrados no se piden (se resuelven solos)
 
 /* ============================================================

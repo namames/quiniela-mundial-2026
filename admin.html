@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin · Quiniela Mundial 2026</title>
+<style>
+  :root{
+    --bg:#efe6d2;--panel:#f7f1e2;--ink:#2c2620;--muted:#8a7f68;--gold:#c9a227;--gold-d:#a8851a;
+    --green:#13633f;--green-d:#0e4d31;--red:#b3242a;--win:#1f7a3d;--winbg:#e3f3e7;
+    --shadow:0 2px 6px rgba(60,45,20,.18);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI",system-ui,Roboto,Arial,sans-serif;color:var(--ink);
+    background:repeating-linear-gradient(45deg,#ece2cb 0 22px,#e9dec4 22px 44px);min-height:100vh}
+  header{position:sticky;top:0;z-index:10;background:linear-gradient(180deg,var(--green),var(--green-d));
+    color:#fff;border-bottom:3px solid var(--gold);box-shadow:0 2px 12px rgba(0,0,0,.25);padding:12px 18px;
+    display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  header h1{font-size:18px;margin:0;font-weight:800;letter-spacing:.3px}
+  header h1 small{display:block;font-size:11px;color:#cfe6da;font-weight:600;letter-spacing:1.5px}
+  header .grow{flex:1}
+  .btn{cursor:pointer;border:0;border-radius:9px;padding:9px 14px;font-weight:700;font-size:14px}
+  .btn-gold{background:linear-gradient(180deg,#e8c452,var(--gold));color:#3a2d05;box-shadow:var(--shadow)}
+  .btn-ghost{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.35)}
+  .btn-line{background:#fff;border:1.5px solid var(--gold);color:var(--gold-d)}
+  .btn-green{background:linear-gradient(180deg,#1c8a57,var(--green));color:#fff}
+  .btn-sm{padding:5px 9px;font-size:12.5px;border-radius:7px}
+  .wrap{max-width:1080px;margin:0 auto;padding:18px}
+  .card{background:var(--panel);border:1.5px solid #e0d2af;border-radius:14px;box-shadow:var(--shadow);margin-bottom:18px;overflow:hidden}
+  .card > h2{margin:0;padding:13px 18px;background:#efe2c2;font-size:15px;border-bottom:1px solid #e0d2af;display:flex;align-items:center;gap:8px}
+  .card .body{padding:16px 18px}
+  .muted{color:var(--muted);font-size:13px}
+  .roundsec{margin-bottom:14px}
+  .roundsec h3{margin:0 0 8px;color:var(--gold-d);font-size:13px;letter-spacing:1px;text-transform:uppercase}
+  .matches{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:10px}
+  .m{border:1.5px solid #e0d2af;border-radius:10px;background:#fff;padding:9px 11px;font-size:13.5px}
+  .m.done{border-color:var(--win);background:var(--winbg)}
+  .m.live{border-color:var(--red);box-shadow:0 0 0 2px rgba(179,36,42,.25)}
+  .m .teams{display:flex;align-items:center;gap:6px;margin-bottom:7px}
+  .m .row{display:flex;align-items:center;gap:8px;padding:3px 0}
+  .m .row.win .nm{font-weight:800;color:var(--win)}
+  .m .row.win .nm::after{content:" ✓";color:var(--win)}
+  .m img.flag{width:24px;height:17px;object-fit:cover;border-radius:2px;box-shadow:0 0 0 1px rgba(0,0,0,.12)}
+  .m .nm{flex:1;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .m .nm.tbd{color:var(--muted);font-style:italic;font-weight:500}
+  .m input.sc{width:38px;text-align:center;border:1px solid #d9c89f;border-radius:6px;padding:5px 2px;font-size:14px;font-weight:700}
+  .m .tie{margin-top:6px;font-size:12.5px;color:var(--red)}
+  .m .tie button{margin-left:5px}
+  .m .foot{display:flex;align-items:center;justify-content:space-between;margin-top:8px;gap:6px}
+  .m .foot label{font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:4px;cursor:pointer}
+  .pill{font-size:10.5px;font-weight:800;padding:2px 7px;border-radius:20px;text-transform:uppercase}
+  .pill.live{background:var(--red);color:#fff}
+  .pill.done{background:var(--win);color:#fff}
+  textarea{width:100%;min-height:90px;border:1px solid #d9c89f;border-radius:8px;padding:9px;font-family:monospace;font-size:11px;resize:vertical}
+  table.lbt{width:100%;border-collapse:collapse;font-size:13.5px}
+  table.lbt th,table.lbt td{padding:8px 11px;text-align:left;border-bottom:1px solid #ece0c4}
+  table.lbt th{background:linear-gradient(180deg,#1c8a57,var(--green));color:#fff;font-size:12px}
+  table.lbt td.pts{text-align:right;font-weight:900;color:var(--gold-d)}
+  table.lbt td.c,table.lbt th.c{text-align:center}
+  .plist{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+  .prow{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #e8dcc0;border-radius:8px;padding:6px 10px;font-size:13.5px}
+  .prow .pn{flex:1;font-weight:600}
+  .prow img{width:22px;height:15px;border-radius:2px}
+  .export{position:sticky;bottom:0;background:linear-gradient(180deg,rgba(247,241,226,.6),var(--panel));
+    border-top:2px solid var(--gold);padding:12px 18px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .ok{color:var(--win);font-weight:800}
+  code{background:#efe2c2;padding:1px 6px;border-radius:5px}
+</style>
+</head>
+<body>
+<header>
+  <h1>⚙️ Panel del organizador<small>QUINIELA MUNDIAL 2026</small></h1>
+  <div class="grow"></div>
+  <a class="btn btn-ghost" href="index.html" target="_blank">Ver quiniela ↗</a>
+  <button class="btn btn-gold" id="exportTop">⬇ Exportar data.js</button>
+</header>
+
+<div class="wrap">
+
+  <div class="card">
+    <h2>📋 Cómo se usa</h2>
+    <div class="body muted">
+      1) Mete resultados / bloquea partidos / agrega gente aquí abajo. &nbsp; 2) Da clic en <b>Exportar data.js</b>.
+      &nbsp; 3) Sube el archivo <code>data.js</code> a GitHub (reemplaza el anterior). Listo, la quiniela se actualiza.
+      <br>Este panel arranca con lo que ya hay en <code>data.js</code>. Nada se guarda hasta que exportas y subes.
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>⚽ Resultados <span class="muted" id="resCount" style="font-weight:400;font-size:12px"></span></h2>
+    <div class="body" id="resBody"></div>
+  </div>
+
+  <div class="card">
+    <h2>👥 Participantes <span class="muted" id="pCount" style="font-weight:400;font-size:12px"></span></h2>
+    <div class="body">
+      <div class="muted">Pega el <b>código</b> de cada nuevo participante (uno por línea; puede ir <code>Nombre: código</code>).</div>
+      <textarea id="pInput" placeholder="Juan: eyJ...&#10;Maria: eyJ..."></textarea>
+      <div style="margin-top:8px"><button class="btn btn-green btn-sm" id="addP">➕ Agregar</button>
+        <span id="addMsg" class="muted"></span></div>
+      <div class="plist" id="plist"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>🏅 Vista previa de la tabla</h2>
+    <div class="body"><table class="lbt" id="lbt"></table></div>
+  </div>
+
+</div>
+
+<div class="export">
+  <button class="btn btn-gold" id="exportBtn">⬇ Descargar data.js</button>
+  <button class="btn btn-line" id="copyBtn">📋 Copiar contenido</button>
+  <span class="muted">→ luego súbelo a GitHub reemplazando <code>data.js</code></span>
+  <span id="expMsg" class="ok"></span>
+</div>
+
+<script src="data.js"></script>
+<script>
+/* ===== equipos ===== */
+const T = {
+  za:["Sudáfrica","za"], ca:["Canadá","ca"], nl:["Países Bajos","nl"], ma:["Marruecos","ma"],
+  de:["Alemania","de"], py:["Paraguay","py"], fr:["Francia","fr"], se:["Suecia","se"],
+  pt:["Portugal","pt"], hr:["Croacia","hr"], es:["España","es"], at:["Austria","at"],
+  us:["Estados Unidos","us"], ba:["Bosnia","ba"], be:["Bélgica","be"], sn:["Senegal","sn"],
+  br:["Brasil","br"], jp:["Japón","jp"], ci:["Costa de Marfil","ci"], no:["Noruega","no"],
+  mx:["México","mx"], ec:["Ecuador","ec"], eng:["Inglaterra","gb-eng"], cd:["RD Congo","cd"],
+  ar:["Argentina","ar"], cv:["Cabo Verde","cv"], au:["Australia","au"], eg:["Egipto","eg"],
+  co:["Colombia","co"], gh:["Ghana","gh"], ch:["Suiza","ch"], dz:["Argelia","dz"]
+};
+const flag = c => c ? `https://flagcdn.com/w80/${T[c][1]}.png` : "";
+const tname = c => c ? T[c][0] : null;
+
+/* ===== estructura del cuadro (igual que index.html) ===== */
+const M = {};
+const addR32=(id,a,b)=>M[id]={id,round:"R32",teamA:a,teamB:b};
+const addUp=(id,round,fa,fb)=>M[id]={id,round,feedA:fa,feedB:fb};
+addR32("r32_1","za","ca");addR32("r32_2","nl","ma");addR32("r32_3","de","py");addR32("r32_4","fr","se");
+addR32("r32_5","pt","hr");addR32("r32_6","es","at");addR32("r32_7","us","ba");addR32("r32_8","be","sn");
+addR32("r32_9","br","jp");addR32("r32_10","ci","no");addR32("r32_11","mx","ec");addR32("r32_12","eng","cd");
+addR32("r32_13","ar","cv");addR32("r32_14","au","eg");addR32("r32_15","co","gh");addR32("r32_16","ch","dz");
+addUp("r16_1","R16","r32_1","r32_2");addUp("r16_2","R16","r32_3","r32_4");addUp("r16_3","R16","r32_5","r32_6");addUp("r16_4","R16","r32_7","r32_8");
+addUp("r16_5","R16","r32_9","r32_10");addUp("r16_6","R16","r32_11","r32_12");addUp("r16_7","R16","r32_13","r32_14");addUp("r16_8","R16","r32_15","r32_16");
+addUp("qf_1","QF","r16_1","r16_2");addUp("qf_2","QF","r16_3","r16_4");addUp("qf_3","QF","r16_5","r16_6");addUp("qf_4","QF","r16_7","r16_8");
+addUp("sf_1","SF","qf_1","qf_2");addUp("sf_2","SF","qf_3","qf_4");addUp("f_1","F","sf_1","sf_2");
+const ALL_IDS = Object.keys(M);
+const ROUNDS = [["R32","Dieciseisavos"],["R16","Octavos"],["QF","Cuartos"],["SF","Semifinales"],["F","Final"]];
+
+/* ===== puntuación (igual que index.html) ===== */
+const PTS={R32:1,R16:2,QF:4,SF:8,F:16}, PTS_EXACT=3, PTS_RESULT=1;
+function decodeCode(s){ return JSON.parse(decodeURIComponent(escape(atob(s.trim())))); }
+
+/* ===== estado editable (arranca de data.js) ===== */
+const D = (window.QUINIELA_DATA)||{};
+let results = Object.assign({}, D.results||{});
+let locked  = new Set(D.locked||[]);
+let noScore = new Set(D.noScore||["r32_1"]);
+let codes   = (D.participants||[]).slice();
+
+/* quién avanza realmente de un partido (resultado real) */
+function realW(id){ return results[id] && results[id].w ? results[id].w : null; }
+function realTeam(id,slot){
+  const m=M[id];
+  if(m.round==="R32") return slot==="A"?m.teamA:m.teamB;
+  return realW(slot==="A"?m.feedA:m.feedB);
+}
+function decisive(id){ const r=results[id]; return r && r.a!=="" && r.a!=null && r.b!=="" && r.b!=null && (+r.a)!==(+r.b); }
+
+/* limpia resultados que quedaron inválidos al cambiar uno previo */
+function validateResults(){
+  ["R16","QF","SF","F"].forEach(rd=>ALL_IDS.filter(id=>M[id].round===rd).forEach(id=>{
+    const r=results[id]; if(!r) return;
+    const a=realTeam(id,"A"), b=realTeam(id,"B");
+    if(r.w && r.w!==a && r.w!==b){ delete results[id]; locked.delete(id); }
+  }));
+}
+
+/* ===== puntuación de un participante ===== */
+const SCORABLE = ()=>ALL_IDS.filter(id=>!noScore.has(id));
+function scoreOne(p){
+  let total=0,adv=0,exact=0; const picks=p.picks||{};
+  SCORABLE().forEach(id=>{
+    const res=results[id]; if(!res||!res.w) return;
+    const pk=picks[id]||{};
+    if(pk.w && pk.w===res.w){ total+=PTS[M[id].round]; adv++; }
+    const has=v=>v!=="" && v!=null;
+    if(has(res.a)&&has(res.b)&&has(pk.a)&&has(pk.b)){
+      const pa=+pk.a,pb=+pk.b,ra=+res.a,rb=+res.b;
+      if(pa===ra&&pb===rb){ total+=PTS_EXACT; exact++; }
+      else if(Math.sign(pa-pb)===Math.sign(ra-rb)) total+=PTS_RESULT;
+    }
+  });
+  return {name:p.name||"(sin nombre)",champion:p.champion,total,adv,exact};
+}
+
+/* ===== acciones de resultados ===== */
+function setScore(id,slot,v){
+  v=v.replace(/[^0-9]/g,'').slice(0,2);
+  const r=results[id]||(results[id]={w:null,a:"",b:""});
+  r[slot]=v;
+  if(r.a!=="" && r.b!==""){
+    if(+r.a>+r.b) r.w=realTeam(id,"A");
+    else if(+r.b>+r.a) r.w=realTeam(id,"B");
+    // empate: w queda como esté (se elige con botón)
+  }
+  if(r.w && r.a!=="" && r.b!=="") locked.add(id);
+  if(r.a==="" && r.b==="" && !r.w){ delete results[id]; }
+  validateResults(); renderAll();
+}
+function chooseTie(id,code){ const r=results[id]||(results[id]={w:null,a:"",b:""}); r.w=code; locked.add(id); validateResults(); renderAll(); }
+function clearResult(id){ delete results[id]; locked.delete(id); validateResults(); renderAll(); }
+function toggleLive(id){ if(locked.has(id)) locked.delete(id); else locked.add(id); renderAll(); }
+function toggleNoScore(id){ if(noScore.has(id)) noScore.delete(id); else noScore.add(id); renderAll(); }
+
+/* ===== render resultados ===== */
+function renderResults(){
+  const box=document.getElementById("resBody"); box.innerHTML="";
+  let pendientes=0;
+  ROUNDS.forEach(([rd,label])=>{
+    const ids=ALL_IDS.filter(id=>M[id].round===rd);
+    const sec=document.createElement("div"); sec.className="roundsec";
+    sec.innerHTML=`<h3>${label}</h3>`;
+    const grid=document.createElement("div"); grid.className="matches";
+    ids.forEach(id=>{
+      const a=realTeam(id,"A"), b=realTeam(id,"B");
+      const r=results[id]||{}; const hasResult=!!(r.w && r.a!=="" && r.b!=="");
+      const isLive=locked.has(id)&&!hasResult;
+      if(!hasResult && (a&&b)) pendientes++;
+      const m=document.createElement("div");
+      m.className="m"+(hasResult?" done":"")+(isLive?" live":"");
+      const slot=(s,code)=>{
+        const win=r.w&&r.w===code;
+        return `<div class="row ${win?'win':''}">
+          ${code?`<img class="flag" src="${flag(code)}">`:`<span style="width:24px"></span>`}
+          <span class="nm ${code?'':'tbd'}">${code?tname(code):'Por definir'}</span>
+          <input class="sc" inputmode="numeric" data-id="${id}" data-slot="${s}" value="${r[s]??''}" ${code?'':'disabled'}>
+        </div>`;
+      };
+      const tie = (r.a!=="" && r.a!=null && r.b!=="" && r.b!=null && (+r.a)===(+r.b) && a && b);
+      m.innerHTML =
+        `<div style="display:flex;justify-content:flex-end;height:14px">${hasResult?'<span class="pill done">Jugado</span>':(isLive?'<span class="pill live">En vivo</span>':'')}</div>`+
+        slot("a",a)+slot("b",b)+
+        (tie?`<div class="tie">Empate → ¿quién pasa (penales)?
+           <button class="btn btn-line btn-sm" data-tie="${id}" data-w="${a}">${tname(a)}</button>
+           <button class="btn btn-line btn-sm" data-tie="${id}" data-w="${b}">${tname(b)}</button></div>`:'')+
+        `<div class="foot">
+           <label><input type="checkbox" data-ns="${id}" ${noScore.has(id)?'checked':''}> no puntúa</label>
+           <span>
+             <button class="btn btn-line btn-sm" data-live="${id}">${isLive?'Quitar en vivo':'🔴 En vivo'}</button>
+             ${(r.a!==''&&r.a!=null)||r.w?`<button class="btn btn-line btn-sm" data-clear="${id}">🗑</button>`:''}
+           </span>
+         </div>`;
+      grid.appendChild(m);
+    });
+    sec.appendChild(grid); box.appendChild(sec);
+  });
+  const conRes=Object.values(results).filter(r=>r&&r.w).length;
+  document.getElementById("resCount").textContent=`· ${conRes} con resultado · ${pendientes} pendientes (con equipos definidos)`;
+  // listeners
+  box.querySelectorAll("input.sc").forEach(i=>i.addEventListener("input",e=>setScore(i.dataset.id,i.dataset.slot,e.target.value)));
+  box.querySelectorAll("[data-tie]").forEach(b=>b.onclick=()=>chooseTie(b.dataset.tie,b.dataset.w));
+  box.querySelectorAll("[data-clear]").forEach(b=>b.onclick=()=>clearResult(b.dataset.clear));
+  box.querySelectorAll("[data-live]").forEach(b=>b.onclick=()=>toggleLive(b.dataset.live));
+  box.querySelectorAll("[data-ns]").forEach(b=>b.onclick=()=>toggleNoScore(b.dataset.ns));
+}
+
+/* ===== render participantes ===== */
+function parsed(){ return codes.map(c=>{ try{return {code:c,p:decodeCode(c)};}catch(e){return null;} }).filter(Boolean); }
+function renderParticipants(){
+  const list=document.getElementById("plist"); list.innerHTML="";
+  const ps=parsed();
+  document.getElementById("pCount").textContent=`· ${ps.length}`;
+  ps.forEach((x,i)=>{
+    const row=document.createElement("div"); row.className="prow";
+    row.innerHTML=`<span class="pn">${(x.p.name||'?').replace(/[<>&]/g,'')}</span>
+      ${x.p.champion?`<img src="${flag(x.p.champion)}"> <span class="muted">${tname(x.p.champion)}</span>`:'<span class="muted">sin campeón</span>'}
+      <button class="btn btn-line btn-sm" data-del="${i}">Quitar</button>`;
+    list.appendChild(row);
+  });
+  list.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{ codes.splice(+b.dataset.del,1); renderAll(); });
+}
+document.getElementById("addP").onclick=()=>{
+  const txt=document.getElementById("pInput").value;
+  let added=0,bad=0;
+  txt.split(/\r?\n/).forEach(line=>{
+    const m=line.match(/[A-Za-z0-9+/=]{40,}/); if(!m) return;
+    const code=m[0];
+    try{ decodeCode(code); if(!codes.includes(code)){ codes.push(code); added++; } }catch(e){ bad++; }
+  });
+  document.getElementById("addMsg").textContent=` ${added} agregado(s)`+(bad?`, ${bad} inválido(s)`:'');
+  document.getElementById("pInput").value="";
+  renderAll();
+};
+
+/* ===== render tabla ===== */
+function renderLb(){
+  const rows=parsed().map(x=>scoreOne(x.p)).sort((a,b)=>b.total-a.total||b.exact-a.exact||a.name.localeCompare(b.name));
+  const nRes=SCORABLE().filter(id=>results[id]&&results[id].w).length;
+  const medal=i=>nRes===0?(i+1):(i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1));
+  document.getElementById("lbt").innerHTML=
+    `<thead><tr><th class="c">#</th><th>Participante</th><th>Campeón</th><th class="c">Aciertos</th><th class="c">Exactos</th><th class="c">Pts</th></tr></thead>
+     <tbody>${rows.map((r,i)=>`<tr>
+        <td class="c">${medal(i)}</td><td>${r.name.replace(/[<>&]/g,'')}</td>
+        <td>${r.champion?`<img src="${flag(r.champion)}" style="width:22px;height:15px;border-radius:2px;vertical-align:middle"> ${tname(r.champion)}`:'—'}</td>
+        <td class="c">${r.adv}</td><td class="c">${r.exact}</td><td class="pts">${r.total}</td></tr>`).join("")}</tbody>`;
+}
+
+/* ===== exportar data.js ===== */
+function exportText(){
+  const lk=JSON.stringify([...locked].filter(id=>M[id]));
+  const ns=JSON.stringify([...noScore].filter(id=>M[id]));
+  let s="/* DATOS DE LA QUINIELA — generado por admin.html. Sube este archivo a GitHub. */\n";
+  s+="window.QUINIELA_DATA = {\n";
+  s+="  locked: "+lk+",\n";
+  s+="  noScore: "+ns+",\n";
+  s+="  results: {\n";
+  const rk=Object.keys(results).filter(id=>results[id]&&results[id].w);
+  rk.forEach((id,i)=>{ const r=results[id]; s+=`    ${id}: { w: "${r.w}", a: "${r.a}", b: "${r.b}" }`+(i<rk.length-1?",":"")+"\n"; });
+  s+="  },\n";
+  s+="  participants: [\n";
+  codes.forEach((c,i)=>{ s+="`"+c+"`"+(i<codes.length-1?",":"")+"\n"; });
+  s+="  ]\n};\n";
+  return s;
+}
+function downloadData(){
+  const blob=new Blob([exportText()],{type:"text/javascript"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="data.js"; a.click();
+  document.getElementById("expMsg").textContent="✓ Descargado — ahora súbelo a GitHub";
+}
+document.getElementById("exportBtn").onclick=downloadData;
+document.getElementById("exportTop").onclick=downloadData;
+document.getElementById("copyBtn").onclick=()=>{ navigator.clipboard.writeText(exportText());
+  document.getElementById("expMsg").textContent="✓ Copiado"; };
+
+/* ===== init ===== */
+function renderAll(){ renderResults(); renderParticipants(); renderLb(); }
+renderAll();
+</script>
+</body>
+</html>
