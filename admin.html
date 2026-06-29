@@ -297,11 +297,13 @@ document.getElementById("addP").onclick=()=>{
 function renderLb(){
   const rows=parsed().map(x=>scoreOne(x.p)).sort((a,b)=>b.total-a.total||b.exact-a.exact||a.name.localeCompare(b.name));
   const nRes=SCORABLE().filter(id=>results[id]&&results[id].w).length;
-  const medal=i=>nRes===0?(i+1):(i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1));
+  const distinct=[...new Set(rows.map(r=>r.total))];               // ranking denso (empate = mismo lugar)
+  const rankOf=r=>distinct.indexOf(r.total)+1;
+  const medal=r=>{ const k=rankOf(r); return nRes===0?k:(k===1?"🥇":k===2?"🥈":k===3?"🥉":k); };
   document.getElementById("lbt").innerHTML=
     `<thead><tr><th class="c">#</th><th>Participante</th><th>Campeón</th><th class="c">Aciertos</th><th class="c">Exactos</th><th class="c">Pts</th></tr></thead>
      <tbody>${rows.map((r,i)=>`<tr>
-        <td class="c">${medal(i)}</td><td>${r.name.replace(/[<>&]/g,'')}</td>
+        <td class="c">${medal(r)}</td><td>${r.name.replace(/[<>&]/g,'')}</td>
         <td>${r.champion?`<img src="${flag(r.champion)}" style="width:22px;height:15px;border-radius:2px;vertical-align:middle"> ${tname(r.champion)}`:'—'}</td>
         <td class="c">${r.adv}</td><td class="c">${r.exact}</td><td class="pts">${r.total}</td></tr>`).join("")}</tbody>`;
 }

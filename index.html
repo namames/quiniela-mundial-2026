@@ -190,7 +190,10 @@
   .lb{display:none;max-width:980px;margin:0 auto;padding:26px 16px 60px}
   body.view-lb .lb{display:block}
   body.view-lb .scroller{display:none}
-  .lb h2{margin:0 0 4px;color:var(--green-d);font-size:22px}
+  .lb h2{margin:0 0 4px;color:var(--green-d);font-size:22px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  #shareBtn{font-size:13px;padding:7px 13px}
+  table.lbt tbody tr.dead{opacity:.5}
+  table.lbt tbody tr.dead td:nth-child(2){text-decoration:line-through}
   .lb .sub{color:var(--muted);font-size:13px;margin-bottom:16px}
   .lbcard{background:var(--panel);border:1.5px solid #e0d2af;border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
   table.lbt{width:100%;border-collapse:collapse;font-size:14px}
@@ -248,12 +251,13 @@
 
 <!-- ===================== HOJA 2: TABLA DE POSICIONES ===================== -->
 <div class="lb" id="leaderboard">
-  <h2>🏅 Tabla de posiciones</h2>
+  <h2>🏅 Tabla de posiciones <button class="btn btn-green" id="shareBtn">📲 Compartir</button></h2>
   <div class="sub" id="lbSub">Aún sin datos.</div>
   <div class="lbcard" id="lbCard"></div>
   <div class="lb-legend">
     <b>Puntos:</b> avance Dieciseisavos 1 · Octavos 2 · Cuartos 4 · Semis 8 · Final/Campeón 16 ·
     marcador exacto +3 · resultado +1. &nbsp;<b>Desempate:</b> más marcadores exactos.
+    <br><b>Máx:</b> techo de puntos que aún puede alcanzar (el avance sólo suma si su equipo sigue vivo). <b>❌</b> = ya no llega al líder.
   </div>
 </div>
 
@@ -790,6 +794,44 @@ function scoreParticipant(p){
   return { name:p.name||"(sin nombre)", champion:p.champion, total, adv, exact };
 }
 
+/* equipo real en cada slot (independiente de picks) y equipos aún vivos */
+function realWinner(id){ return RESULTS[id] && RESULTS[id].w ? RESULTS[id].w : null; }
+function realSlotTeam(id,slot){
+  const m=M[id];
+  if(m.round==="R32") return slot==="A"?m.teamA:m.teamB;
+  return realWinner(slot==="A"?m.feedA:m.feedB);
+}
+function aliveTeams(){
+  const dead=new Set();
+  ALL_IDS.forEach(id=>{ const res=RESULTS[id]; if(!res||!res.w) return;
+    const a=realSlotTeam(id,"A"), b=realSlotTeam(id,"B");
+    if(a&&a!==res.w) dead.add(a); if(b&&b!==res.w) dead.add(b); });
+  return new Set(Object.keys(T).filter(c=>!dead.has(c)));
+}
+/* techo: puntos que ESA persona todavía puede sumar (avance sólo si su equipo sigue vivo) */
+function futureCeiling(p, alive){
+  let pts=0; const picks=p.picks||{}; const has=v=>v!==""&&v!=null;
+  SCORABLE.forEach(id=>{
+    const res=RESULTS[id]; if(res&&res.w) return;           // ya jugado → cuenta en el total actual
+    const pk=picks[id]||{};
+    if(has(pk.a)&&has(pk.b)) pts+=PTS_EXACT;                // techo de marcador
+    if(pk.w && alive.has(pk.w)) pts+=PTS[M[id].round];      // techo de avance (su equipo debe seguir vivo)
+  });
+  return pts;
+}
+/* arma las filas ordenadas con rank (empates comparten lugar), techo y "eliminado" */
+function standingsData(){
+  const alive=aliveTeams();
+  const rows=PARTICIPANTS.map(p=>{ const s=scoreParticipant(p); s.p=p; s.max=s.total+futureCeiling(p,alive); return s; })
+    .sort((a,b)=> b.total-a.total || b.exact-a.exact || a.name.localeCompare(b.name));
+  const leaderFloor = rows.length ? Math.max(...rows.map(r=>r.total)) : 0;
+  const distinct=[...new Set(rows.map(r=>r.total))];        // ranking denso por puntos (empate = mismo lugar)
+  rows.forEach(r=>{ r.rank=distinct.indexOf(r.total)+1; r.dead = r.max < leaderFloor; });
+  const nRes = SCORABLE.filter(id=>RESULTS[id]&&RESULTS[id].w).length;
+  return {rows, nRes, aliveCount: rows.filter(r=>!r.dead).length};
+}
+const medalFor = rank => rank===1?"🥇":rank===2?"🥈":rank===3?"🥉":rank;
+
 function renderLeaderboard(){
   const card=document.getElementById("lbCard"), sub=document.getElementById("lbSub");
   const nRes = SCORABLE.filter(id=>RESULTS[id]&&RESULTS[id].w).length;
@@ -801,22 +843,35 @@ function renderLeaderboard(){
       Cuando recibas los formularios, se agregan aquí y la tabla se calcula sola.</div>`;
     return;
   }
-  const rows = PARTICIPANTS.map(p => Object.assign(scoreParticipant(p), {p}))
-    .sort((a,b)=> b.total-a.total || b.exact-a.exact || a.name.localeCompare(b.name));
-  const medal = i => i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1);
-  sub.innerHTML = `${rows.length} participante(s) · ${nRes}/${SCORABLE.length} partidos con resultado · <b>clic en un nombre para ver su cuadro</b>`;
+  const {rows} = standingsData();
+  sub.innerHTML = `${rows.length} participante(s) · ${nRes}/${SCORABLE.length} partidos jugados · <b>clic en un nombre para ver su cuadro</b>`;
   card.innerHTML = `<table class="lbt">
     <thead><tr><th class="c">#</th><th>Participante</th><th>Campeón</th>
-      <th class="c">Aciertos</th><th class="c">Exactos</th><th class="c">Pts</th></tr></thead>
-    <tbody>${rows.map((r,i)=>`
-      <tr class="${i===0&&nRes>0?'top1':''}">
-        <td class="c pos">${nRes>0?medal(i):i+1}</td>
-        <td>${escapeHtml(r.name)} <span style="color:var(--gold-d)">👁️</span></td>
+      <th class="c">Aciertos</th><th class="c">Exactos</th><th class="c">Pts</th><th class="c" title="Puntos máximos que aún puede alcanzar">Máx</th></tr></thead>
+    <tbody>${rows.map(r=>`
+      <tr class="${r.rank===1&&nRes>0?'top1':''} ${r.dead?'dead':''}">
+        <td class="c pos">${nRes>0?medalFor(r.rank):r.rank}</td>
+        <td>${escapeHtml(r.name)} ${r.dead?'<span title="Ya no puede alcanzar al líder">❌</span>':''} <span style="color:var(--gold-d)">👁️</span></td>
         <td><div class="champcell">${r.champion?`<img src="${teamFlag(r.champion)}"> ${teamName(r.champion)}`:'<span style="color:var(--muted)">—</span>'}</div></td>
         <td class="c">${r.adv}</td><td class="c">${r.exact}</td>
         <td class="pts">${r.total}</td>
+        <td class="c" style="color:var(--muted)">${r.max}</td>
       </tr>`).join("")}</tbody></table>`;
   card.querySelectorAll('tbody tr').forEach((tr,i)=> tr.onclick = ()=> openReview(rows[i].p));
+}
+
+/* ---------- COMPARTIR TABLA POR WHATSAPP ---------- */
+function shareStandings(){
+  const {rows, nRes, aliveCount} = standingsData();
+  if(!rows.length){ alert("Aún no hay participantes."); return; }
+  let t = `🏆 *QUINIELA MUNDIAL 2026* — Tabla\n⚽ ${nRes} partido(s) jugado(s)\n\n`;
+  rows.forEach(r=>{
+    const pos = nRes>0 ? medalFor(r.rank) : (r.rank+".");
+    t += `${pos} ${r.name} — ${r.total} pt${r.total===1?'':'s'}${r.dead?' ❌':''}\n`;
+  });
+  if(nRes>0) t += `\n🔥 ${aliveCount} sigue(n) con chance del 1er lugar`;
+  t += `\n👉 ${location.origin}${location.pathname}`;
+  window.open("https://wa.me/?text="+encodeURIComponent(t), "_blank");
 }
 
 /* ---------- MODO REVISIÓN ---------- */
@@ -873,6 +928,7 @@ document.getElementById("loadBtn").onclick=openLoad;
 document.getElementById("resetBtn").onclick=()=>{ if(confirm("¿Borrar todas tus selecciones?")){ localStorage.removeItem("quiniela2026"); location.reload(); } };
 document.getElementById("tabBracket").onclick=()=>{ if(reviewMode) exitReview(); showView("bracket"); };
 document.getElementById("tabLb").onclick=()=>{ if(reviewMode) exitReview(); showView("lb"); };
+document.getElementById("shareBtn").onclick=(e)=>{ e.stopPropagation(); shareStandings(); };
 document.getElementById("modalX").onclick=closeModal;
 document.getElementById("overlay").addEventListener("click",e=>{ if(e.target.id==="overlay") closeModal(); });
 window.addEventListener("resize", ()=>requestAnimationFrame(drawWires));
