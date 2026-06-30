@@ -193,6 +193,12 @@ function scoreOne(p){
   });
   return {name:p.name||"(sin nombre)",champion:p.champion,total,adv,exact};
 }
+/* ranking actual (nombre→lugar, denso). Se usa para guardar la foto "anterior". */
+function standingsRanks(){
+  const rs=parsed().map(x=>scoreOne(x.p)).sort((a,b)=>b.total-a.total||b.exact-a.exact||a.name.localeCompare(b.name));
+  const distinct=[...new Set(rs.map(r=>r.total))];
+  const map={}; rs.forEach(r=>map[r.name]=distinct.indexOf(r.total)+1); return map;
+}
 
 /* ===== acciones de resultados ===== */
 function setScore(id,slot,v){
@@ -316,6 +322,7 @@ function exportText(){
   s+="window.QUINIELA_DATA = {\n";
   s+="  locked: "+lk+",\n";
   s+="  noScore: "+ns+",\n";
+  s+="  prevStandings: "+JSON.stringify(baselineRanks)+",\n";   // foto del ranking ANTES de esta actualización
   s+="  results: {\n";
   const rk=Object.keys(results).filter(id=>results[id]&&results[id].w);
   rk.forEach((id,i)=>{ const r=results[id]; s+=`    ${id}: { w: "${r.w}", a: "${r.a}", b: "${r.b}" }`+(i<rk.length-1?",":"")+"\n"; });
@@ -337,6 +344,8 @@ document.getElementById("copyBtn").onclick=()=>{ navigator.clipboard.writeText(e
 
 /* ===== init ===== */
 function renderAll(){ renderResults(); renderParticipants(); renderLb(); }
+// foto del ranking tal como está al abrir el panel (= "antes" de los cambios de esta sesión)
+const baselineRanks = standingsRanks();
 renderAll();
 </script>
 </body>
