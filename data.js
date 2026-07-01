@@ -1,15 +1,16 @@
 /* DATOS DE LA QUINIELA — generado por admin.html. Sube este archivo a GitHub. */
 window.QUINIELA_DATA = {
-  locked: ["r32_1","r32_9","r32_3","r32_2","r32_10","r32_4"],
+  locked: ["r32_1","r32_9","r32_3","r32_2","r32_10","r32_4","r32_11"],
   noScore: ["r32_1"],
-  prevStandings: {"Serchcres":1,"Fabrizio":2,"Gerryy":2,"Aware":3,"Dreiniac":4,"Kyngz":4,"Maveryck":4,"pps":4,"Sofía Espinosa":4,"Druu":5,"PapiRayRM":5,"Ravencita :p":5,"Jeremy":6,"Spiral":6},
+  prevStandings: {"Fabrizio":1,"Gerryy":1,"Serchcres":1,"Sofía Espinosa":2,"Aware":3,"Dreiniac":4,"Kyngz":4,"Maveryck":4,"pps":4,"Druu":5,"PapiRayRM":5,"Ravencita :p":5,"Jeremy":6,"Spiral":6},
   results: {
     r32_1: { w: "ca", a: "0", b: "1" },
     r32_9: { w: "br", a: "2", b: "1" },
     r32_3: { w: "py", a: "1", b: "1" },
     r32_2: { w: "ma", a: "1", b: "1" },
     r32_10: { w: "no", a: "1", b: "2" },
-    r32_4: { w: "fr", a: "3", b: "0" }
+    r32_4: { w: "fr", a: "3", b: "0" },
+    r32_11: { w: "mx", a: "2", b: "0" }
   },
   participants: [
 `eyJuYW1lIjoiRmFicml6aW8iLCJ0cyI6IjIwMjYtMDYtMjhUMjE6NDE6MjAuMzAyWiIsInBpY2tzIjp7InIzMl8xIjp7InciOm51bGwsImEiOiIiLCJiIjoiIn0sInIzMl8yIjp7InciOiJubCIsImEiOiIyIiwiYiI6IjEifSwicjMyXzMiOnsidyI6ImRlIiwiYSI6IjMiLCJiIjoiMSJ9LCJyMzJfNCI6eyJ3IjoiZnIiLCJhIjoiMyIsImIiOiIwIn0sInIzMl81Ijp7InciOiJwdCIsImEiOiIyIiwiYiI6IjIifSwicjMyXzYiOnsidyI6ImVzIiwiYSI6IjIiLCJiIjoiMCJ9LCJyMzJfNyI6eyJ3IjoidXMiLCJhIjoiMiIsImIiOiIwIn0sInIzMl84Ijp7InciOiJzbiIsImEiOiIxIiwiYiI6IjEifSwicjMyXzkiOnsidyI6ImJyIiwiYSI6IjIiLCJiIjoiMCJ9LCJyMzJfMTAiOnsidyI6Im5vIiwiYSI6IjEiLCJiIjoiMiJ9LCJyMzJfMTEiOnsidyI6Im14IiwiYSI6IjEiLCJiIjoiMSJ9LCJyMzJfMTIiOnsidyI6ImVuZyIsImEiOiIzIiwiYiI6IjAifSwicjMyXzEzIjp7InciOiJhciIsImEiOiIzIiwiYiI6IjAifSwicjMyXzE0Ijp7InciOiJlZyIsImEiOiIwIiwiYiI6IjIifSwicjMyXzE1Ijp7InciOiJjbyIsImEiOiIxIiwiYiI6IjEifSwicjMyXzE2Ijp7InciOiJjaCIsImEiOiIxIiwiYiI6IjEifSwicjE2XzEiOnsidyI6Im5sIiwiYSI6IjAiLCJiIjoiMiJ9LCJyMTZfMiI6eyJ3IjoiZnIiLCJhIjoiMCIsImIiOiIyIn0sInIxNl8zIjp7InciOiJlcyIsImEiOiIxIiwiYiI6IjEifSwicjE2XzQiOnsidyI6InNuIiwiYSI6IjEiLCJiIjoiMSJ9LCJyMTZfNSI6eyJ3IjoiYnIiLCJhIjoiMiIsImIiOiIxIn0sInIxNl82Ijp7InciOiJteCIsImEiOiIxIiwiYiI6IjEifSwicjE2XzciOnsidyI6ImFyIiwiYSI6IjIiLCJiIjoiMCJ9LCJyMTZfOCI6eyJ3IjoiY28iLCJhIjoiMSIsImIiOiIwIn0sInFmXzEiOnsidyI6ImZyIiwiYSI6IjAiLCJiIjoiMiJ9LCJxZl8yIjp7InciOiJlcyIsImEiOiIyIiwiYiI6IjEifSwicWZfMyI6eyJ3IjoiYnIiLCJhIjoiMiIsImIiOiIwIn0sInFmXzQiOnsidyI6ImFyIiwiYSI6IjIiLCJiIjoiMSJ9LCJzZl8xIjp7InciOiJmciIsImEiOiIyIiwiYiI6IjAifSwic2ZfMiI6eyJ3IjoiYnIiLCJhIjoiMiIsImIiOiIyIn0sImZfMSI6eyJ3IjoiZnIiLCJhIjoiMiIsImIiOiIxIn19LCJjaGFtcGlvbiI6ImZyIn0=`,
