@@ -114,6 +114,9 @@
   }
   .match.locked .livebadge.done{background:var(--win)}
   .match.missing{border-color:var(--red);box-shadow:0 0 0 2px rgba(179,36,42,.35),var(--shadow)}
+  .match .meta{font-size:8.5px;line-height:1.25;color:#9c9069;text-align:center;padding:2px 5px;
+    border-top:1px dashed #ecdfbf;letter-spacing:.2px}
+  .match.final .meta{font-size:9.5px}
 
   /* ---------- MODO REVISIÓN (cuadro de un participante) ---------- */
   .reviewbar{display:none}
@@ -247,7 +250,7 @@
   </div>
 </header>
 
-<div class="hint">📜 Escribe el <b>marcador</b> de cada partido: el ganador <b>avanza solo</b>. Solo en <b>empate</b> haz clic en quién pasa (penales). Los partidos ya jugados o <b>en vivo</b> aparecen bloqueados (no se pueden editar). &nbsp; <b>← desliza para ver todo el cuadro →</b></div>
+<div class="hint">📜 Escribe el <b>marcador</b> de cada partido: el ganador <b>avanza solo</b>. Solo en <b>empate</b> haz clic en quién pasa (penales). Los partidos ya jugados o <b>en vivo</b> aparecen bloqueados (no se pueden editar). &nbsp; <span style="color:var(--muted)">Fechas/horas en <b>CDMX</b>.</span> &nbsp; <b>← desliza para ver todo el cuadro →</b></div>
 
 <!-- ===================== BARRA DE REVISIÓN (cuadro de un participante) ===================== -->
 <div class="reviewbar" id="reviewBar"></div>
@@ -486,6 +489,35 @@ function validate(){
 /* ============================================================
    RENDER
    ============================================================ */
+/* Calendario: fecha · estadio · ciudad por partido (2026). Editable.
+   Nota: sedes de octavos y 2 cuartos están "por confirmar" — ajústalas aquí si quieres. */
+// t = hora de saque en CDMX (UTC-6). Vacío = por confirmar / no publicada.
+const SCHED = {
+  r32_1:{d:"28 JUN",t:"13:00",v:"SoFi",c:"Los Ángeles"},        r32_2:{d:"28 JUN",t:"19:00",v:"Estadio BBVA",c:"Monterrey"},
+  r32_3:{d:"28 JUN",t:"14:30",v:"Gillette",c:"Boston"},         r32_9:{d:"28 JUN",t:"11:00",v:"NRG",c:"Houston"},
+  r32_10:{d:"29 JUN",t:"11:00",v:"AT&T",c:"Dallas"},            r32_4:{d:"29 JUN",t:"15:00",v:"MetLife",c:"Nueva York/NJ"},
+  r32_11:{d:"30 JUN",t:"",v:"Azteca",c:"Ciudad de México"},     r32_12:{d:"1 JUL",t:"10:00",v:"Mercedes-Benz",c:"Atlanta"},
+  r32_8:{d:"1 JUL",t:"14:00",v:"Lumen Field",c:"Seattle"},      r32_7:{d:"1 JUL",t:"18:00",v:"Levi's",c:"San Francisco"},
+  r32_6:{d:"2 JUL",t:"13:00",v:"SoFi",c:"Los Ángeles"},         r32_16:{d:"2 JUL",t:"21:00",v:"BC Place",c:"Vancouver"},
+  r32_5:{d:"2 JUL",t:"17:00",v:"BMO Field",c:"Toronto"},        r32_14:{d:"3 JUL",t:"",v:"AT&T",c:"Dallas"},
+  r32_13:{d:"3 JUL",t:"",v:"Hard Rock",c:"Miami"},              r32_15:{d:"3 JUL",t:"19:30",v:"Arrowhead",c:"Kansas City"},
+  r16_1:{d:"4 JUL",t:"",v:"",c:"Sede por confirmar"},  r16_2:{d:"4 JUL",t:"",v:"",c:"Sede por confirmar"},
+  r16_5:{d:"5 JUL",t:"",v:"",c:"Sede por confirmar"},  r16_6:{d:"5 JUL",t:"",v:"",c:"Sede por confirmar"},
+  r16_3:{d:"6 JUL",t:"",v:"",c:"Sede por confirmar"},  r16_4:{d:"6 JUL",t:"",v:"",c:"Sede por confirmar"},
+  r16_7:{d:"7 JUL",t:"",v:"",c:"Sede por confirmar"},  r16_8:{d:"7 JUL",t:"",v:"",c:"Sede por confirmar"},
+  qf_1:{d:"9 JUL",t:"",v:"Gillette",c:"Boston"},   qf_2:{d:"9 JUL",t:"",v:"",c:"Sede por confirmar"},
+  qf_3:{d:"10 JUL",t:"",v:"SoFi",c:"Los Ángeles"}, qf_4:{d:"10 JUL",t:"",v:"",c:"Sede por confirmar"},
+  sf_1:{d:"14 JUL",t:"",v:"AT&T",c:"Dallas"},      sf_2:{d:"15 JUL",t:"",v:"Mercedes-Benz",c:"Atlanta"},
+  f_1:{d:"19 JUL",t:"",v:"MetLife",c:"Nueva York/NJ"}
+};
+function metaHTML(id){
+  const s = SCHED[id]; if(!s) return "";
+  const dt = s.d + (s.t ? " "+s.t : "");
+  const line  = `${dt} · ${s.v?s.v+", ":""}${s.c}`;
+  const title = `${s.v?s.v+" — ":""}${s.c} · ${s.d} 2026${s.t?" · "+s.t+" h (CDMX)":""}`;
+  return `<div class="meta" title="${escapeHtml(title)}">${escapeHtml(line)}</div>`;
+}
+
 function buildMatchEl(id){
   const m = M[id];
   const el = document.createElement("div");
@@ -494,6 +526,7 @@ function buildMatchEl(id){
   el.innerHTML =
     `<div class="livebadge">● En vivo</div>`+
     slotHTML(id,"A")+slotHTML(id,"B")+
+    metaHTML(id)+
     `<div class="cmp"></div>`;
   return el;
 }
