@@ -118,6 +118,21 @@
     border-top:1px dashed #ecdfbf;letter-spacing:.2px}
   .match.final .meta{font-size:9.5px}
 
+  /* próximo partido: resaltado pulsante + etiqueta */
+  @keyframes nextpulse{0%,100%{box-shadow:0 0 0 2px var(--gold),0 0 7px rgba(201,162,39,.45),var(--shadow)}
+    50%{box-shadow:0 0 0 3px var(--gold),0 0 16px rgba(201,162,39,.8),var(--shadow)}}
+  .match.nextmatch{border-color:var(--gold)!important;animation:nextpulse 1.7s ease-in-out infinite;position:relative;z-index:4}
+  .match.nextmatch::after{content:"⏭ SIGUE";position:absolute;top:-9px;right:6px;background:var(--gold);color:#3a2d05;
+    font-size:8.5px;font-weight:900;padding:1px 6px;border-radius:8px;letter-spacing:.5px;z-index:5}
+  .nextbar{display:none;align-items:center;gap:10px 14px;flex-wrap:wrap;max-width:1500px;margin:8px auto 0;padding:9px 16px;
+    background:linear-gradient(180deg,#fff7e0,#f3e6bd);border:2px solid var(--gold);border-radius:12px;box-shadow:var(--shadow)}
+  .nextbar .nblbl{font-weight:900;color:var(--gold-d);font-size:13px;letter-spacing:.5px}
+  .nextbar .nbmatch{font-weight:800;display:flex;align-items:center;gap:6px;font-size:15px}
+  .nextbar .nbmatch .nbflag{width:24px;height:16px;border-radius:2px}
+  .nextbar .nbmatch b{color:var(--muted);font-weight:700}
+  .nextbar .nbmeta{color:var(--muted);font-size:12.5px}
+  .nextbar .nbgo{margin-left:auto;font-size:13px;padding:6px 12px}
+
   /* ---------- MODO REVISIÓN (cuadro de un participante) ---------- */
   .reviewbar{display:none}
   body.review .reviewbar{
@@ -147,7 +162,8 @@
   body.view-lb table.lbt tbody tr:hover{background:#fdeecb !important}
 
   /* ---------- CENTER / FINAL ---------- */
-  .center{display:flex;flex-direction:column;align-items:center;justify-content:center;width:230px;gap:10px;z-index:2;margin:0 6px}
+  .center{flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;width:240px;gap:10px;z-index:2;margin:0 6px}
+  .round-final{width:auto;align-items:center}
   .trophy{width:135px;height:auto;display:block;filter:drop-shadow(0 5px 9px rgba(60,45,20,.3))}
   .trophy-fb{font-size:90px;line-height:1;filter:drop-shadow(0 5px 9px rgba(120,90,10,.35))}
   .final-wrap{display:flex;flex-direction:column;align-items:center;gap:6px}
@@ -254,6 +270,9 @@
 
 <!-- ===================== BARRA DE REVISIÓN (cuadro de un participante) ===================== -->
 <div class="reviewbar" id="reviewBar"></div>
+
+<!-- ===================== PRÓXIMO PARTIDO ===================== -->
+<div class="nextbar" id="nextBar"></div>
 
 <!-- ===================== HOJA 2: TABLA DE POSICIONES ===================== -->
 <div class="lb" id="leaderboard">
@@ -491,7 +510,7 @@ function validate(){
    ============================================================ */
 /* Calendario: fecha · estadio · ciudad por partido (2026). Editable.
    Nota: sedes de octavos y 2 cuartos están "por confirmar" — ajústalas aquí si quieres. */
-// t = hora de saque en CDMX (UTC-6). Vacío = por confirmar / no publicada.
+// t = hora de saque en CDMX (UTC-6). Vacío = no publicada.
 const SCHED = {
   r32_1:{d:"28 JUN",t:"13:00",v:"SoFi",c:"Los Ángeles"},        r32_2:{d:"28 JUN",t:"19:00",v:"Estadio BBVA",c:"Monterrey"},
   r32_3:{d:"28 JUN",t:"14:30",v:"Gillette",c:"Boston"},         r32_9:{d:"28 JUN",t:"11:00",v:"NRG",c:"Houston"},
@@ -501,15 +520,26 @@ const SCHED = {
   r32_6:{d:"2 JUL",t:"13:00",v:"SoFi",c:"Los Ángeles"},         r32_16:{d:"2 JUL",t:"21:00",v:"BC Place",c:"Vancouver"},
   r32_5:{d:"2 JUL",t:"17:00",v:"BMO Field",c:"Toronto"},        r32_14:{d:"3 JUL",t:"",v:"AT&T",c:"Dallas"},
   r32_13:{d:"3 JUL",t:"",v:"Hard Rock",c:"Miami"},              r32_15:{d:"3 JUL",t:"19:30",v:"Arrowhead",c:"Kansas City"},
-  r16_1:{d:"4 JUL",t:"",v:"Lincoln Financial",c:"Filadelfia"}, r16_2:{d:"4 JUL",t:"",v:"NRG",c:"Houston"},
-  r16_5:{d:"5 JUL",t:"",v:"MetLife",c:"Nueva York/NJ"},        r16_6:{d:"5 JUL",t:"",v:"Azteca",c:"Ciudad de México"},
-  r16_3:{d:"6 JUL",t:"",v:"AT&T",c:"Dallas"},                  r16_4:{d:"6 JUL",t:"",v:"Lumen Field",c:"Seattle"},
-  r16_7:{d:"7 JUL",t:"",v:"Mercedes-Benz",c:"Atlanta"},        r16_8:{d:"7 JUL",t:"",v:"BC Place",c:"Vancouver"},
-  qf_1:{d:"9 JUL",t:"",v:"Gillette",c:"Boston"},   qf_2:{d:"9 JUL",t:"",v:"",c:"Sede por confirmar"},
-  qf_3:{d:"10 JUL",t:"",v:"SoFi",c:"Los Ángeles"}, qf_4:{d:"10 JUL",t:"",v:"",c:"Sede por confirmar"},
-  sf_1:{d:"14 JUL",t:"",v:"AT&T",c:"Dallas"},      sf_2:{d:"15 JUL",t:"",v:"Mercedes-Benz",c:"Atlanta"},
-  f_1:{d:"19 JUL",t:"",v:"MetLife",c:"Nueva York/NJ"}
+  r16_1:{d:"4 JUL",t:"11:00",v:"Lincoln Financial",c:"Filadelfia"}, r16_2:{d:"4 JUL",t:"15:00",v:"NRG",c:"Houston"},
+  r16_5:{d:"5 JUL",t:"14:00",v:"MetLife",c:"Nueva York/NJ"},        r16_6:{d:"5 JUL",t:"18:00",v:"Azteca",c:"Ciudad de México"},
+  r16_3:{d:"6 JUL",t:"13:00",v:"AT&T",c:"Dallas"},                  r16_4:{d:"6 JUL",t:"18:00",v:"Lumen Field",c:"Seattle"},
+  r16_7:{d:"7 JUL",t:"10:00",v:"Mercedes-Benz",c:"Atlanta"},        r16_8:{d:"7 JUL",t:"14:00",v:"BC Place",c:"Vancouver"},
+  qf_1:{d:"9 JUL",t:"14:00",v:"Gillette",c:"Boston"},       qf_2:{d:"10 JUL",t:"13:00",v:"SoFi",c:"Los Ángeles"},
+  qf_3:{d:"11 JUL",t:"15:00",v:"Hard Rock",c:"Miami"},      qf_4:{d:"11 JUL",t:"19:00",v:"Arrowhead",c:"Kansas City"},
+  sf_1:{d:"14 JUL",t:"13:00",v:"AT&T",c:"Dallas"},          sf_2:{d:"15 JUL",t:"13:00",v:"Mercedes-Benz",c:"Atlanta"},
+  f_1:{d:"19 JUL",t:"13:00",v:"MetLife",c:"Nueva York/NJ"}
 };
+// próximo partido por jugar = el más cercano en el tiempo sin resultado aún
+const MES = {ENE:1,FEB:2,MAR:3,ABR:4,MAY:5,JUN:6,JUL:7,AGO:8,SEP:9,OCT:10,NOV:11,DIC:12};
+function schedTime(id){
+  const s=SCHED[id]; if(!s) return Infinity;
+  const [day,mon]=s.d.split(" "); const [hh,mm]=(s.t||"12:00").split(":");
+  return new Date(2026,(MES[mon]||7)-1,+day,+hh||12,+mm||0).getTime();
+}
+function nextMatchId(){
+  const pend = ALL_IDS.filter(id=>!(RESULTS[id]&&RESULTS[id].w)).sort((a,b)=>schedTime(a)-schedTime(b));
+  return pend.length ? pend[0] : null;
+}
 function metaHTML(id){
   const s = SCHED[id]; if(!s) return "";
   const dt = s.d + (s.t ? " "+s.t : "");
@@ -588,8 +618,10 @@ function onPick(id, slot){
 }
 
 function refresh(){
+  const nid = reviewMode ? null : nextMatchId();
   ALL_IDS.forEach(id=>{
     const m=M[id], el=document.getElementById("m-"+id);
+    el.classList.toggle("nextmatch", id===nid);
     const locked = isLockedNow(m);
     // en revisión NO sobreescribimos con el real: mostramos lo que la persona predijo
     const real = (!reviewMode && locked && RESULTS[id] && RESULTS[id].w) ? RESULTS[id] : null;
@@ -646,7 +678,27 @@ function refresh(){
   document.getElementById("ptext").textContent = done+"/"+PICKABLE.length;
   document.getElementById("pfill").style.width = (done/PICKABLE.length*100)+"%";
   document.getElementById("pname").value = state.name||"";
+  renderNextBar();
   drawWires();
+}
+
+/* ---------- PRÓXIMO PARTIDO (banner en el Cuadro) ---------- */
+function renderNextBar(){
+  const bar=document.getElementById("nextBar");
+  const visible = !reviewMode && !document.body.classList.contains("view-lb");
+  const id = visible ? nextMatchId() : null;
+  if(!id){ bar.style.display="none"; return; }
+  bar.style.display="flex";
+  const a=realSlotTeam(id,"A"), b=realSlotTeam(id,"B"), s=SCHED[id];
+  const team = c => c ? `<img src="${teamFlag(c)}" class="nbflag"> ${teamName(c)}` : '<span style="color:var(--muted)">Por definir</span>';
+  const round = {R32:"Dieciseisavos",R16:"Octavos",QF:"Cuartos",SF:"Semifinal",F:"Final"}[M[id].round];
+  bar.innerHTML =
+    `<span class="nblbl">⏭ Próximo</span>
+     <span class="nbmatch">${team(a)} <b>vs</b> ${team(b)}</span>
+     <span class="nbmeta">${round} · ${s.d}${s.t?" "+s.t+" h":""} · ${escapeHtml(s.v?s.v+", ":"")}${escapeHtml(s.c)}</span>
+     <button class="btn btn-line nbgo" id="nbGo">Ver en el cuadro ↓</button>`;
+  const go=bar.querySelector("#nbGo");
+  if(go) go.onclick=()=>{ const el=document.getElementById("m-"+id); if(el) el.scrollIntoView({behavior:"smooth",inline:"center",block:"center"}); };
 }
 
 /* conectores SVG entre cada partido y sus dos alimentadores */
@@ -951,6 +1003,7 @@ function showView(v){
   document.body.classList.toggle("view-lb", v==="lb");
   document.getElementById("tabLb").classList.toggle("active", v==="lb");
   document.getElementById("tabBracket").classList.toggle("active", v!=="lb");
+  renderNextBar();
   if(v==="lb") renderLeaderboard(); else requestAnimationFrame(drawWires);
 }
 
