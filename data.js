@@ -1,6 +1,6 @@
 /* DATOS DE LA QUINIELA — generado por admin.html. Sube este archivo a GitHub. */
 window.QUINIELA_DATA = {
-  locked: ["r32_1","r32_9","r32_3","r32_2","r32_10","r32_4","r32_11","r32_12","r32_8","r32_7","r32_6","r32_5"],
+  locked: ["r32_1","r32_9","r32_3","r32_2","r32_10","r32_4","r32_11","r32_12","r32_8","r32_7","r32_6","r32_5","r32_16"],
   noScore: ["r32_1"],
   prevStandings: {"Gerryy":1,"Serchcres":1,"Sofía Espinosa":2,"Fabrizio":3,"Maveryck":4,"Druu":5,"Jeremy":6,"pps":6,"Spiral":6,"Aware":7,"Dreiniac":8,"PapiRayRM":8,"Ravencita :p":9,"Kyngz":10,"Dave":11},
   results: {
@@ -15,7 +15,8 @@ window.QUINIELA_DATA = {
     r32_8: { w: "be", a: "3", b: "2" },
     r32_7: { w: "us", a: "2", b: "0" },
     r32_6: { w: "es", a: "3", b: "0" },
-    r32_5: { w: "pt", a: "2", b: "1" }
+    r32_5: { w: "pt", a: "2", b: "1" },
+    r32_16: { w: "ch", a: "2", b: "0" }
   },
   participants: [
 `eyJuYW1lIjoiRmFicml6aW8iLCJ0cyI6IjIwMjYtMDYtMjhUMjE6NDE6MjAuMzAyWiIsInBpY2tzIjp7InIzMl8xIjp7InciOm51bGwsImEiOiIiLCJiIjoiIn0sInIzMl8yIjp7InciOiJubCIsImEiOiIyIiwiYiI6IjEifSwicjMyXzMiOnsidyI6ImRlIiwiYSI6IjMiLCJiIjoiMSJ9LCJyMzJfNCI6eyJ3IjoiZnIiLCJhIjoiMyIsImIiOiIwIn0sInIzMl81Ijp7InciOiJwdCIsImEiOiIyIiwiYiI6IjIifSwicjMyXzYiOnsidyI6ImVzIiwiYSI6IjIiLCJiIjoiMCJ9LCJyMzJfNyI6eyJ3IjoidXMiLCJhIjoiMiIsImIiOiIwIn0sInIzMl84Ijp7InciOiJzbiIsImEiOiIxIiwiYiI6IjEifSwicjMyXzkiOnsidyI6ImJyIiwiYSI6IjIiLCJiIjoiMCJ9LCJyMzJfMTAiOnsidyI6Im5vIiwiYSI6IjEiLCJiIjoiMiJ9LCJyMzJfMTEiOnsidyI6Im14IiwiYSI6IjEiLCJiIjoiMSJ9LCJyMzJfMTIiOnsidyI6ImVuZyIsImEiOiIzIiwiYiI6IjAifSwicjMyXzEzIjp7InciOiJhciIsImEiOiIzIiwiYiI6IjAifSwicjMyXzE0Ijp7InciOiJlZyIsImEiOiIwIiwiYiI6IjIifSwicjMyXzE1Ijp7InciOiJjbyIsImEiOiIxIiwiYiI6IjEifSwicjMyXzE2Ijp7InciOiJjaCIsImEiOiIxIiwiYiI6IjEifSwicjE2XzEiOnsidyI6Im5sIiwiYSI6IjAiLCJiIjoiMiJ9LCJyMTZfMiI6eyJ3IjoiZnIiLCJhIjoiMCIsImIiOiIyIn0sInIxNl8zIjp7InciOiJlcyIsImEiOiIxIiwiYiI6IjEifSwicjE2XzQiOnsidyI6InNuIiwiYSI6IjEiLCJiIjoiMSJ9LCJyMTZfNSI6eyJ3IjoiYnIiLCJhIjoiMiIsImIiOiIxIn0sInIxNl82Ijp7InciOiJteCIsImEiOiIxIiwiYiI6IjEifSwicjE2XzciOnsidyI6ImFyIiwiYSI6IjIiLCJiIjoiMCJ9LCJyMTZfOCI6eyJ3IjoiY28iLCJhIjoiMSIsImIiOiIwIn0sInFmXzEiOnsidyI6ImZyIiwiYSI6IjAiLCJiIjoiMiJ9LCJxZl8yIjp7InciOiJlcyIsImEiOiIyIiwiYiI6IjEifSwicWZfMyI6eyJ3IjoiYnIiLCJhIjoiMiIsImIiOiIwIn0sInFmXzQiOnsidyI6ImFyIiwiYSI6IjIiLCJiIjoiMSJ9LCJzZl8xIjp7InciOiJmciIsImEiOiIyIiwiYiI6IjAifSwic2ZfMiI6eyJ3IjoiYnIiLCJhIjoiMiIsImIiOiIyIn0sImZfMSI6eyJ3IjoiZnIiLCJhIjoiMiIsImIiOiIxIn19LCJjaGFtcGlvbiI6ImZyIn0=`,
