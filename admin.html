@@ -183,21 +183,23 @@ function scoreOne(p){
   SCORABLE().forEach(id=>{
     const res=results[id]; if(!res||!res.w) return;
     const pk=picks[id]||{};
-    if(pk.w && pk.w===res.w){ total+=PTS[M[id].round]; adv++; }
+    const acerto = pk.w && pk.w===res.w;
+    if(acerto){ total+=PTS[M[id].round]; adv++; }
     const has=v=>v!=="" && v!=null;
-    if(has(res.a)&&has(res.b)&&has(pk.a)&&has(pk.b)){
-      const pa=+pk.a,pb=+pk.b,ra=+res.a,rb=+res.b;
-      if(pa===ra&&pb===rb){ total+=PTS_EXACT; exact++; }
-      else if(Math.sign(pa-pb)===Math.sign(ra-rb)) total+=PTS_RESULT;
+    // el marcador solo cuenta si además acertó al ganador
+    if(acerto && has(res.a)&&has(res.b)&&has(pk.a)&&has(pk.b)){
+      if(+pk.a===+res.a && +pk.b===+res.b){ total+=PTS_EXACT; exact++; }
+      else total+=PTS_RESULT;
     }
   });
   return {name:p.name||"(sin nombre)",champion:p.champion,total,adv,exact};
 }
-/* ranking actual (nombre→lugar, denso). Se usa para guardar la foto "anterior". */
+/* ranking actual (nombre→lugar único). Se usa para guardar la foto "anterior".
+   Desempate: puntos → exactos → aciertos → quién envió primero → nombre. */
+function rankSort(a,b){ return b.total-a.total||b.exact-a.exact||b.adv-a.adv||(a.ts<b.ts?-1:a.ts>b.ts?1:0)||a.name.localeCompare(b.name); }
+function rankedRows(){ return parsed().map(x=>Object.assign(scoreOne(x.p),{ts:x.p.ts||""})).sort(rankSort); }
 function standingsRanks(){
-  const rs=parsed().map(x=>scoreOne(x.p)).sort((a,b)=>b.total-a.total||b.exact-a.exact||a.name.localeCompare(b.name));
-  const distinct=[...new Set(rs.map(r=>r.total))];
-  const map={}; rs.forEach(r=>map[r.name]=distinct.indexOf(r.total)+1); return map;
+  const map={}; rankedRows().forEach((r,i)=>map[r.name]=i+1); return map;
 }
 
 /* ===== acciones de resultados ===== */
@@ -301,15 +303,13 @@ document.getElementById("addP").onclick=()=>{
 
 /* ===== render tabla ===== */
 function renderLb(){
-  const rows=parsed().map(x=>scoreOne(x.p)).sort((a,b)=>b.total-a.total||b.exact-a.exact||a.name.localeCompare(b.name));
+  const rows=rankedRows();                                        // rank único con desempate
   const nRes=SCORABLE().filter(id=>results[id]&&results[id].w).length;
-  const distinct=[...new Set(rows.map(r=>r.total))];               // ranking denso (empate = mismo lugar)
-  const rankOf=r=>distinct.indexOf(r.total)+1;
-  const medal=r=>{ const k=rankOf(r); return nRes===0?k:(k===1?"🥇":k===2?"🥈":k===3?"🥉":k); };
+  const medal=i=>{ const k=i+1; return nRes===0?k:(k===1?"🥇":k===2?"🥈":k===3?"🥉":k); };
   document.getElementById("lbt").innerHTML=
     `<thead><tr><th class="c">#</th><th>Participante</th><th>Campeón</th><th class="c">Aciertos</th><th class="c">Exactos</th><th class="c">Pts</th></tr></thead>
      <tbody>${rows.map((r,i)=>`<tr>
-        <td class="c">${medal(r)}</td><td>${r.name.replace(/[<>&]/g,'')}</td>
+        <td class="c">${medal(i)}</td><td>${r.name.replace(/[<>&]/g,'')}</td>
         <td>${r.champion?`<img src="${flag(r.champion)}" style="width:22px;height:15px;border-radius:2px;vertical-align:middle"> ${tname(r.champion)}`:'—'}</td>
         <td class="c">${r.adv}</td><td class="c">${r.exact}</td><td class="pts">${r.total}</td></tr>`).join("")}</tbody>`;
 }

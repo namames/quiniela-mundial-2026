@@ -224,8 +224,6 @@
   body.view-lb .scroller{display:none}
   .lb h2{margin:0 0 4px;color:var(--green-d);font-size:22px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
   #shareBtn{font-size:13px;padding:7px 13px}
-  table.lbt tbody tr.dead{opacity:.5}
-  table.lbt tbody tr.dead td:nth-child(3){text-decoration:line-through}
   .mv{font-size:11px;font-weight:800;white-space:nowrap}
   .mv.up{color:var(--win)} .mv.down{color:var(--red)} .mv.same{color:var(--muted)} .mv.new{color:var(--gold-d);font-size:10px}
   .lb .sub{color:var(--muted);font-size:13px;margin-bottom:16px}
@@ -303,7 +301,8 @@
   <div class="lbcard" id="lbCard"></div>
   <div class="lb-legend">
     <b>Puntos:</b> avance Dieciseisavos 1 · Octavos 2 · Cuartos 4 · Semis 8 · Final/Campeón 16 ·
-    marcador exacto +3 · resultado +1. &nbsp;<b>Desempate:</b> más marcadores exactos.
+    marcador exacto +3 · resultado +1 <i>(el marcador solo suma si acertaste quién gana)</i>.
+    &nbsp;<b>Desempate:</b> marcadores exactos → aciertos → quién envió primero.
     <br><b>Máx:</b> techo de puntos que aún puede alcanzar (el avance sólo suma si su equipo sigue vivo). <b>❌</b> = ya no llega al líder.
     <br><b>Mov:</b> <span style="color:var(--win)">▲</span> subió / <span style="color:var(--red)">▼</span> bajó / ＝ igual vs la actualización anterior.
   </div>
@@ -503,11 +502,12 @@ function matchPoints(id, picks){
   if(M[id].noScore) return null;
   const res = RESULTS[id]; if(!res || !res.w) return null;
   const pk = (picks||state.picks)[id] || {}; let pts = 0;
-  if(pk.w && pk.w===res.w) pts += PTS[M[id].round];
+  const acerto = pk.w && pk.w===res.w;
+  if(acerto) pts += PTS[M[id].round];
   const has = v => v!=="" && v!=null;
-  if(has(res.a)&&has(res.b)&&has(pk.a)&&has(pk.b)){
+  if(acerto && has(res.a)&&has(res.b)&&has(pk.a)&&has(pk.b)){
     if(+pk.a===+res.a && +pk.b===+res.b) pts += PTS_EXACT;
-    else if(Math.sign(+pk.a-+pk.b)===Math.sign(+res.a-+res.b)) pts += PTS_RESULT;
+    else pts += PTS_RESULT;
   }
   return pts;
 }
@@ -839,10 +839,12 @@ function openRules(){
       <tr><td>Final (acertar al campeón)</td><td class="r">${PTS.F} pts</td></tr>
     </table>
     <table class="ptable">
-      <tr><th>Marcador (cualquier ronda)</th><th></th></tr>
+      <tr><th>Marcador (solo si acertaste al ganador)</th><th></th></tr>
       <tr><td>Marcador exacto</td><td class="r">+${PTS_EXACT} pts</td></tr>
-      <tr><td>Resultado correcto (gana / empata / pierde)</td><td class="r">+${PTS_RESULT} pt</td></tr>
+      <tr><td>Ganador correcto, pero marcador distinto</td><td class="r">+${PTS_RESULT} pt</td></tr>
     </table>
+    <div class="note">El marcador <b>solo suma si acertaste quién gana/avanza</b>. Si tu equipo no fue el que ganó, ese marcador era de otro partido y no cuenta.</div>
+    <p style="margin-top:8px"><b>Desempate</b> (para que nadie quede empatado): 1) más marcadores exactos, 2) más aciertos de avance, 3) quién envió su quiniela primero.</p>
     <h4>Ejemplo</h4>
     <p>Partido real de <b>cuartos</b>: <b>Argentina 2–1 Brasil</b>.</p>
     <ul>
@@ -856,7 +858,7 @@ function openRules(){
     <ul>
       <li>Para predecir que un equipo gana <b>en penales</b>: pon un <b>empate</b> en el marcador y dale <b>clic al equipo</b> que crees que avanza.</li>
       <li>El punto de <b>avance</b> se lo lleva quien atinó al que pasó, sin importar si fue por penales.</li>
-      <li>El <b>resultado correcto</b> (+${PTS_RESULT}) se gana con haber predicho <b>cualquier empate</b>, porque a los 120' el partido terminó empatado (lo decidieron los penales).</li>
+      <li>Para sumar marcador debes acertar al que <b>avanza</b> (el de los penales). Si le atinas al empate exacto Y al que pasa → +${PTS_EXACT}; si aciertas al que pasa pero no el marcador → +${PTS_RESULT}.</li>
       <li>El marcador <b>de la tanda</b> (4–2, etc.) no cuenta para nada.</li>
     </ul>
     <div class="note">⚠️ <b>Sudáfrica–Canadá</b> ya está en juego: está bloqueado y <b>no otorga puntos</b>, pero sí eliges quién avanza para poder completar tu cuadro. El marcador queda deshabilitado.</div>
@@ -881,12 +883,13 @@ function scoreParticipant(p){
   SCORABLE.forEach(id=>{
     const res = RESULTS[id]; if(!res || !res.w) return;     // sin resultado aún
     const pk = picks[id]||{};
-    if(pk.w && pk.w===res.w){ total += PTS[M[id].round]; adv++; }      // acierto de avance
+    const acerto = pk.w && pk.w===res.w;                    // acertó quién gana/avanza
+    if(acerto){ total += PTS[M[id].round]; adv++; }
     const has = v => v!=="" && v!=null;
-    if(has(res.a)&&has(res.b)&&has(pk.a)&&has(pk.b)){
-      const pa=+pk.a, pb=+pk.b, ra=+res.a, rb=+res.b;
-      if(pa===ra && pb===rb){ total+=PTS_EXACT; exact++; }
-      else if(Math.sign(pa-pb)===Math.sign(ra-rb)){ total+=PTS_RESULT; }
+    // el marcador SOLO cuenta si además acertó al ganador (si no, el marcador era de otro equipo)
+    if(acerto && has(res.a)&&has(res.b)&&has(pk.a)&&has(pk.b)){
+      if(+pk.a===+res.a && +pk.b===+res.b){ total+=PTS_EXACT; exact++; }
+      else { total+=PTS_RESULT; }
     }
   });
   return { name:p.name||"(sin nombre)", champion:p.champion, total, adv, exact };
@@ -920,11 +923,11 @@ function futureCeiling(p, alive){
 /* arma las filas ordenadas con rank (empates comparten lugar), techo y "eliminado" */
 function standingsData(){
   const alive=aliveTeams();
-  const rows=PARTICIPANTS.map(p=>{ const s=scoreParticipant(p); s.p=p; s.max=s.total+futureCeiling(p,alive); return s; })
-    .sort((a,b)=> b.total-a.total || b.exact-a.exact || a.name.localeCompare(b.name));
+  const rows=PARTICIPANTS.map(p=>{ const s=scoreParticipant(p); s.p=p; s.ts=p.ts||""; s.max=s.total+futureCeiling(p,alive); return s; })
+    // desempate: puntos → marcadores exactos → aciertos → quién envió primero → nombre  (rank único)
+    .sort((a,b)=> b.total-a.total || b.exact-a.exact || b.adv-a.adv || (a.ts<b.ts?-1:a.ts>b.ts?1:0) || a.name.localeCompare(b.name));
   const leaderFloor = rows.length ? Math.max(...rows.map(r=>r.total)) : 0;
-  const distinct=[...new Set(rows.map(r=>r.total))];        // ranking denso por puntos (empate = mismo lugar)
-  rows.forEach(r=>{ r.rank=distinct.indexOf(r.total)+1; r.dead = r.max < leaderFloor; });
+  rows.forEach((r,i)=>{ r.rank=i+1; r.dead = r.max < leaderFloor; });   // cada quien su propio lugar
   // movimiento vs la actualización anterior (foto guardada en data.js → prevStandings)
   const prev = (window.QUINIELA_DATA && window.QUINIELA_DATA.prevStandings) || {};
   const hasPrev = Object.keys(prev).length>0;
